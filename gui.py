@@ -7,6 +7,7 @@ st.title("🍲 FoodAI")
 
 food = st.text_input("Enter food")
 
+
 grams = st.number_input(
     "Quantity (grams)",
     min_value=1,
