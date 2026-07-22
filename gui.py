@@ -17,7 +17,7 @@ if st.button("Analyze"):
 
     if food:
 
-        result = manager_agent(food, grams)
+      def manager_agent(food):
 
         st.subheader("Nutrition Information")
         st.json(result["nutrition"])
