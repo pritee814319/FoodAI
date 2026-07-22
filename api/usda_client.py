@@ -1,38 +1,101 @@
-import requests
 import os
-import streamlit as st
+import requests
+from dotenv import load_dotenv
+
+# Load .env file when running locally
+load_dotenv()
 
 
 def get_usda_key():
 
+    # First check Streamlit Cloud secrets
     try:
-        return st.secrets["USDA_API_KEY"]
+        import streamlit as st
 
-    except:
-        return os.getenv("USDA_API_KEY")
+        if "USDA_API_KEY" in st.secrets:
+            return st.secrets["USDA_API_KEY"]
+
+    except Exception:
+        pass
 
 
-USDA_API_KEY = get_usda_key()
+    # Otherwise use local .env
+    return os.getenv("USDA_API_KEY")
 
 
-def search_food(food_name):
+
+def search_food(food):
+
+    api_key = get_usda_key()
+
+
+    if not api_key:
+        return {
+            "error": "USDA API key missing"
+        }
+
 
     url = "https://api.nal.usda.gov/fdc/v1/foods/search"
 
+
     params = {
-        "api_key": USDA_API_KEY,
-        "query": food_name,
+
+        "api_key": api_key,
+
+        "query": food,
+
         "pageSize": 1
+
     }
 
-    response = requests.get(url, params=params)
 
-    print("STATUS:", response.status_code)
-    print("RESULT:", response.text[:500])
+    try:
 
-    data = response.json()
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10
+        )
 
-    if "foods" in data and len(data["foods"]) > 0:
-        return data["foods"][0]
 
-    return None
+        print("USDA STATUS:", response.status_code)
+
+
+        data = response.json()
+
+
+        if response.status_code != 200:
+
+            return {
+                "error": data
+            }
+
+
+        foods = data.get(
+            "foods",
+            []
+        )
+
+
+        if not foods:
+
+            return {
+                "error": "Food not found"
+            }
+
+
+        return foods[0]
+
+
+    except requests.exceptions.Timeout:
+
+        return {
+            "error": "USDA request timeout"
+        }
+
+
+    except Exception as e:
+
+        return {
+            "error": str(e)
+        }
