@@ -33,7 +33,8 @@ if st.button("Analyze Food"):
                 # Call Manager Agent
                 result = manager_agent(food)
 
-
+st.write("DEBUG RESULT:")
+st.json(result)
                 st.success("Analysis Complete!")
 
 
