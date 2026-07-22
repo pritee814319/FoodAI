@@ -3,6 +3,7 @@ import streamlit as st
 from agents.manager_agent import manager_agent
 
 
+
 # Page setup
 st.set_page_config(
     page_title="FoodAI",
