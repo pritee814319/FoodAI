@@ -1,46 +1,18 @@
 import os
 import requests
-from dotenv import load_dotenv
-
-# Load .env file when running locally
-load_dotenv()
 
 
-def get_usda_key():
-
-    # First check Streamlit Cloud secrets
-    try:
-        import streamlit as st
-
-        if "USDA_API_KEY" in st.secrets:
-            return st.secrets["USDA_API_KEY"]
-
-    except Exception:
-        pass
+USDA_API_KEY = os.getenv("USDA_API_KEY")
 
 
-    # Otherwise use local .env
-    return os.getenv("USDA_API_KEY")
-
-
-
-def search_food(food):
-
-    api_key = get_usda_key()
-
-
-    if not api_key:
-        return {
-            "error": "USDA API key missing"
-        }
-
+def search_usda_food(food):
 
     url = "https://api.nal.usda.gov/fdc/v1/foods/search"
 
 
     params = {
 
-        "api_key": api_key,
+        "api_key": USDA_API_KEY,
 
         "query": food,
 
@@ -49,53 +21,90 @@ def search_food(food):
     }
 
 
-    try:
-
-        response = requests.get(
-            url,
-            params=params,
-            timeout=10
-        )
+    response = requests.get(
+        url,
+        params=params
+    )
 
 
-        print("USDA STATUS:", response.status_code)
+    print(
+        "USDA STATUS:",
+        response.status_code
+    )
 
 
-        data = response.json()
-
-
-        if response.status_code != 200:
-
-            return {
-                "error": data
-            }
-
-
-        foods = data.get(
-            "foods",
-            []
-        )
-
-
-        if not foods:
-
-            return {
-                "error": "Food not found"
-            }
-
-
-        return foods[0]
-
-
-    except requests.exceptions.Timeout:
+    if response.status_code != 200:
 
         return {
-            "error": "USDA request timeout"
+
+            "error": "USDA API error",
+
+            "status": response.status_code,
+
+            "details": response.text
+
         }
 
 
-    except Exception as e:
+    data = response.json()
+
+
+    foods = data.get(
+        "foods",
+        []
+    )
+
+
+    if not foods:
 
         return {
-            "error": str(e)
+
+            "error": "Food not found"
+
         }
+
+
+    food_data = foods[0]
+
+
+    nutrients = food_data.get(
+        "foodNutrients",
+        []
+    )
+
+
+    nutrition = {}
+
+
+    for item in nutrients:
+
+
+        nutrient_name = item.get(
+            "nutrientName"
+        )
+
+
+        value = item.get(
+            "value",
+            0
+        )
+
+
+        if nutrient_name:
+
+            nutrition[nutrient_name] = value
+
+
+
+    return {
+
+        "food": food_data.get(
+            "description",
+            food
+        ),
+
+        "nutrition": nutrition,
+
+        "source": "USDA FoodData Central"
+
+    }
