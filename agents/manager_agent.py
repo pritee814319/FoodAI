@@ -24,7 +24,7 @@ def divide_nutrition(total, people):
 def manager_agent(food, people):
 
     print("START MANAGER:", food)
-    print("SERVINGS:", people)
+    print("PEOPLE:", people)
 
 
     recipes = recipe_agent(food)
@@ -40,15 +40,30 @@ def manager_agent(food, people):
     recipe = recipes[0]
 
 
+    print(
+        "FIRST RECIPE:",
+        recipe.get("Recipe")
+    )
+
+
     ingredients = recipe.get(
         "Ingredients",
         []
     )
 
 
+    print(
+        "INGREDIENT COUNT:",
+        len(ingredients)
+    )
+
+
     nutrition = ingredient_agent(
         ingredients
     )
+
+
+    print("NUTRITION DONE")
 
 
     total_nutrition = nutrition.get(
@@ -75,7 +90,7 @@ def manager_agent(food, people):
 
             "Total Recipe Nutrition": total_nutrition,
 
-            "Per Person Nutrition": per_person
+            "Nutrition Per Person": per_person
 
         }
 
