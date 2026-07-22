@@ -55,9 +55,8 @@ def ingredient_agent(ingredients):
 
 
         nutrition = nutrition_agent(
-            name,
-            100
-        )
+    name
+)
 
 
         if "error" not in nutrition:
