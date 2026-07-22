@@ -28,12 +28,19 @@ def recipe_agent(food):
                 )
 
         recipes.append({
-    "name": meal["strMeal"],
-    "cuisine": meal["strArea"],
-    "category": meal["strCategory"],
-    "image": meal["strMealThumb"],
-    "ingredients": ingredients,
-    "instructions": meal["strInstructions"]
+
+    "Recipe": meal["strMeal"],
+
+    "Cuisine": meal["strArea"],
+
+    "Category": meal["strCategory"],
+
+    "Ingredients": ingredients,
+
+    "Instructions": meal["strInstructions"],
+
+    "Image": meal["strMealThumb"]
+
 })
 
     return recipes
