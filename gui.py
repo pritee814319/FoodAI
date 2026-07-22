@@ -23,10 +23,9 @@ if st.button("Analyze"):
 
     if food:
 
-        result = nutrition_agent(
-            food,
-            grams
-        )
+        result = from agents.manager_agent import manager_agent
+
+result = manager_agent(food, grams)
 
         st.subheader("Nutrition Information")
 
