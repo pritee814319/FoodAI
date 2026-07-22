@@ -3,8 +3,6 @@ import streamlit as st
 from agents.manager_agent import manager_agent
 
 
-
-# Page setup
 st.set_page_config(
     page_title="FoodAI",
     page_icon="🍲"
@@ -15,7 +13,6 @@ st.title("🍲 FoodAI")
 st.write("AI Food Nutrition & Recipe Analyzer")
 
 
-# User input
 food = st.text_input(
     "Enter food name",
     placeholder="Example: Chicken Handi"
@@ -30,33 +27,33 @@ if st.button("Analyze Food"):
 
             try:
 
-                # Call Manager Agent
                 result = manager_agent(food)
 
-st.write("DEBUG RESULT:")
-st.json(result)
+
+                # DEBUG
+                st.subheader("DEBUG RESULT")
+                st.json(result)
+
+
                 st.success("Analysis Complete!")
 
-
-                # ------------------------
-                # Nutrition Section
-                # ------------------------
 
                 st.subheader("🥗 Nutrition Information")
 
 
-                if (
-                    "nutrition" in result
-                    and result["nutrition"]
-                ):
+                nutrition = result.get(
+                    "nutrition",
+                    {}
+                )
 
-                    total_nutrition = result["nutrition"].get(
-                        "Total Nutrition",
-                        {}
-                    )
+
+                if nutrition:
 
                     st.json(
-                        total_nutrition
+                        nutrition.get(
+                            "Total Nutrition",
+                            nutrition
+                        )
                     )
 
                 else:
@@ -65,10 +62,6 @@ st.json(result)
                         "Nutrition information not available"
                     )
 
-
-                # ------------------------
-                # Recipe Section
-                # ------------------------
 
                 st.subheader("🍛 Top Recipes")
 
@@ -83,67 +76,44 @@ st.json(result)
 
                     for recipe in recipes:
 
-                        with st.expander(
+                        st.markdown(
+                            f"### {recipe.get('Recipe','Recipe')}"
+                        )
+
+                        st.write(
+                            "Cuisine:",
                             recipe.get(
-                                "Recipe",
-                                "Recipe"
+                                "Cuisine",
+                                ""
                             )
+                        )
+
+
+                        st.write(
+                            "Ingredients:"
+                        )
+
+                        for item in recipe.get(
+                            "Ingredients",
+                            []
                         ):
 
                             st.write(
-                                "Cuisine:",
-                                recipe.get(
-                                    "Cuisine",
-                                    ""
-                                )
-                            )
-
-                            st.write(
-                                "Category:",
-                                recipe.get(
-                                    "Category",
-                                    ""
-                                )
+                                "-",
+                                item
                             )
 
 
-                            st.subheader(
-                                "Ingredients"
+                        st.write(
+                            "Instructions:"
+                        )
+
+                        st.write(
+                            recipe.get(
+                                "Instructions",
+                                ""
                             )
-
-                            for item in recipe.get(
-                                "Ingredients",
-                                []
-                            ):
-
-                                st.write(
-                                    "-",
-                                    item
-                                )
-
-
-                            st.subheader(
-                                "Instructions"
-                            )
-
-                            st.write(
-                                recipe.get(
-                                    "Instructions",
-                                    ""
-                                )
-                            )
-
-
-                            image = recipe.get(
-                                "Image"
-                            )
-
-                            if image:
-
-                                st.image(
-                                    image,
-                                    width=400
-                                )
+                        )
 
                 else:
 
@@ -162,5 +132,5 @@ st.json(result)
     else:
 
         st.warning(
-            "Please enter a food name"
+            "Please enter food name"
         )
