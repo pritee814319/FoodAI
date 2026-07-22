@@ -16,7 +16,6 @@ def nutrition_agent(food):
 
     result = search_food(food)
 
-
     if not result:
         return {
             "error": "Food not found"
