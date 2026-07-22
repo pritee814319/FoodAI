@@ -15,10 +15,12 @@ if st.button("Analyze"):
 
     if dish:
 
-        response = requests.get(
-            "http://127.0.0.1:5000/analyze",
-            params={"dish": dish}
-        )
+        from agents.nutrition_agent import nutrition_agent
+
+
+result = nutrition_agent(dish)
+
+st.write(result)
 
         if response.status_code == 200:
 
