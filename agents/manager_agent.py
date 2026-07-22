@@ -1,23 +1,53 @@
 from agents.recipe_agent import recipe_agent
-from agents.nutrition_agent import nutrition_agent
+from agents.ingredient_agent import ingredient_agent
 
 
-def manager_agent(food, grams=100):
+def manager_agent(food):
 
     result = {
+
         "query": food,
-        "recipe": None,
+
+        "recipes": None,
+
         "nutrition": None
+
     }
 
-    # Get recipes
+
+    # Step 1: Find recipes
+
     recipes = recipe_agent(food)
 
-    result["recipe"] = recipes
+    result["recipes"] = recipes
 
-    # Get nutrition
-    nutrition = nutrition_agent(food, grams)
 
-    result["nutrition"] = nutrition
+    # Step 2: Analyze nutrition from first recipe
+
+    if recipes and isinstance(recipes, list):
+
+        first_recipe = recipes[0]
+
+
+        ingredients = first_recipe.get(
+            "Ingredients",
+            []
+        )
+
+
+        nutrition = ingredient_agent(
+            ingredients
+        )
+
+
+        result["nutrition"] = nutrition
+
+
+    else:
+
+        result["nutrition"] = {
+            "error": "No recipe found"
+        }
+
 
     return result
