@@ -21,46 +21,23 @@ def divide_nutrition(total, people):
 
 
 
-def manager_agent(food, people=4):
+def manager_agent(food, people):
 
     print("START MANAGER:", food)
-
-    result = {
-
-        "query": food,
-
-        "servings": people,
-
-        "recipes": [],
-
-        "nutrition": {}
-
-    }
+    print("SERVINGS:", people)
 
 
-    # Get recipes
     recipes = recipe_agent(food)
-
-    print(
-        "RECIPES FOUND:",
-        len(recipes) if isinstance(recipes, list) else 0
-    )
 
 
     if not recipes or not isinstance(recipes, list):
 
-        result["error"] = "No recipes found"
+        return {
+            "error": "No recipes found"
+        }
 
-        return result
 
-
-    # Use first recipe
     recipe = recipes[0]
-
-    print(
-        "FIRST RECIPE:",
-        recipe.get("Recipe")
-    )
 
 
     ingredients = recipe.get(
@@ -69,19 +46,9 @@ def manager_agent(food, people=4):
     )
 
 
-    print(
-        "INGREDIENT COUNT:",
-        len(ingredients)
-    )
-
-
-    # Calculate nutrition
     nutrition = ingredient_agent(
         ingredients
     )
-
-
-    print("NUTRITION DONE")
 
 
     total_nutrition = nutrition.get(
@@ -96,16 +63,20 @@ def manager_agent(food, people=4):
     )
 
 
-    result["recipes"] = recipes
+    return {
 
+        "query": food,
 
-    result["nutrition"] = {
+        "servings": people,
 
-        "Total Recipe Nutrition": total_nutrition,
+        "recipes": recipes,
 
-        f"Nutrition Per Person ({people} servings)": per_person
+        "nutrition": {
+
+            "Total Recipe Nutrition": total_nutrition,
+
+            "Per Person Nutrition": per_person
+
+        }
 
     }
-
-
-    return result
