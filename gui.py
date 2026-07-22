@@ -8,12 +8,6 @@ st.title("🍲 FoodAI")
 food = st.text_input("Enter food")
 
 
-grams = st.number_input(
-    "Quantity (grams)",
-    min_value=1,
-    value=100
-)
-
 if st.button("Analyze"):
 
     if food:
