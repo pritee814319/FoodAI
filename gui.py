@@ -19,74 +19,128 @@ food = st.text_input(
 )
 
 
+people = st.number_input(
+    "How many people are you cooking for?",
+    min_value=1,
+    max_value=50,
+    value=2
+)
+
+
+
 if st.button("Analyze Food"):
+
 
     if food.strip():
 
-        with st.spinner("FoodAI agents are working..."):
+        with st.spinner(
+            "FoodAI agents are working..."
+        ):
+
 
             try:
 
-                result = manager_agent(food , people)
 
-             
-                st.success("Analysis Complete!")
-
-
-                st.subheader("🥗 Nutrition Information")
-
-
-                nutrition = result.get(
-                    "nutrition",
-                    {}
+                result = manager_agent(
+                    food,
+                    people
                 )
 
 
-                if nutrition:
+                if "error" in result:
 
-                    st.json(
-                        nutrition.get(
-                            "Total Nutrition",
-                            nutrition
-                        )
+                    st.error(
+                        result["error"]
                     )
+
 
                 else:
 
-                    st.warning(
-                        "Nutrition information not available"
+
+                    st.success(
+                        "Analysis Complete!"
                     )
 
 
-                st.subheader("🍛 Top Recipes")
+                    # Nutrition
+
+                    st.subheader(
+                        "🥗 Nutrition Information"
+                    )
 
 
-                recipes = result.get(
-                    "recipes",
-                    []
-                )
+                    nutrition = result.get(
+                        "nutrition",
+                        {}
+                    )
 
 
-                if recipes:
+                    st.write(
+                        "Total Recipe Nutrition"
+                    )
+
+                    st.json(
+                        nutrition.get(
+                            "Total Recipe Nutrition",
+                            {}
+                        )
+                    )
+
+
+                    st.write(
+                        f"Nutrition Per Person ({people} people)"
+                    )
+
+
+                    st.json(
+                        nutrition.get(
+                            "Nutrition Per Person",
+                            {}
+                        )
+                    )
+
+
+                    # Recipes
+
+                    st.subheader(
+                        "🍛 Recipe"
+                    )
+
+
+                    recipes = result.get(
+                        "recipes",
+                        []
+                    )
+
 
                     for recipe in recipes:
 
+
                         st.markdown(
-                            f"### {recipe.get('Recipe','Recipe')}"
+                            f"## {recipe.get('Recipe')}"
                         )
+
 
                         st.write(
                             "Cuisine:",
                             recipe.get(
-                                "Cuisine",
-                                ""
+                                "Cuisine"
                             )
                         )
 
 
                         st.write(
-                            "Ingredients:"
+                            "Category:",
+                            recipe.get(
+                                "Category"
+                            )
                         )
+
+
+                        st.write(
+                            "### Ingredients"
+                        )
+
 
                         for item in recipe.get(
                             "Ingredients",
@@ -100,24 +154,19 @@ if st.button("Analyze Food"):
 
 
                         st.write(
-                            "Instructions:"
+                            "### Instructions"
                         )
+
 
                         st.write(
                             recipe.get(
-                                "Instructions",
-                                ""
+                                "Instructions"
                             )
                         )
 
-                else:
-
-                    st.warning(
-                        "No recipes found"
-                    )
-
 
             except Exception as e:
+
 
                 st.error(
                     f"FoodAI Error: {e}"
@@ -125,6 +174,7 @@ if st.button("Analyze Food"):
 
 
     else:
+
 
         st.warning(
             "Please enter food name"
