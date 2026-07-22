@@ -1,104 +1,27 @@
-
-import difflib
-
-
-# Common food correction dictionary
-# We can expand this later
-FOOD_CORRECTIONS = {
-
-    "chicken hundi": "Chicken Handi",
-    "chiken handi": "Chicken Handi",
-    "chiken hundi": "Chicken Handi",
-
-    "butter chiken": "Butter Chicken",
-    "buter chicken": "Butter Chicken",
-
-    "biriyani": "Biryani",
-    "biriyani rice": "Biryani",
-
-    "piza": "Pizza",
-    "pizaa": "Pizza",
-
-    "pasta carbonara": "Pasta Carbonara",
-
-    "tacos": "Tacos",
-
-    "sushi": "Sushi"
-
-}
-
+from api.duckduckgo_client import search_food
 
 
 def food_understanding_agent(food):
 
-    original = food.strip()
+    query = food.strip()
 
-
-    if not original:
-
+    if not query:
         return {
-
-            "original": "",
-            "corrected": "",
-            "confidence": 0
-
+            "query": "",
+            "matches": []
         }
 
+    matches = search_food(query)
 
-    # normalize
-    cleaned = original.lower()
+    if not matches:
+        matches = [query.title()]
 
-
-    # Exact correction
-    if cleaned in FOOD_CORRECTIONS:
-
-        return {
-
-            "original": original,
-
-            "corrected": FOOD_CORRECTIONS[cleaned],
-
-            "confidence": 1.0
-
-        }
-
-
-
-    # Try fuzzy matching
-    match = difflib.get_close_matches(
-
-        cleaned,
-
-        FOOD_CORRECTIONS.keys(),
-
-        n=1,
-
-        cutoff=0.7
-
-    )
-
-
-    if match:
-
-        return {
-
-            "original": original,
-
-            "corrected": FOOD_CORRECTIONS[match[0]],
-
-            "confidence": 0.8
-
-        }
-
-
-
-    # If no correction needed
     return {
 
-        "original": original,
+        "query": query,
 
-        "corrected": original.title(),
+        "matches": matches,
 
-        "confidence": 0.5
+        "selected": matches[0]
 
     }
