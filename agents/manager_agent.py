@@ -15,15 +15,13 @@ def manager_agent(food):
     }
 
 
-    # Step 1: Find recipes
-
+    # Find recipes
     recipes = recipe_agent(food)
 
     result["recipes"] = recipes
 
 
-    # Step 2: Analyze nutrition from first recipe
-
+    # Analyze nutrition from first recipe
     if recipes and isinstance(recipes, list):
 
         first_recipe = recipes[0]
