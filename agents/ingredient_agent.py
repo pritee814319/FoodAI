@@ -3,7 +3,6 @@ from agents.nutrition_agent import nutrition_agent
 
 def clean_ingredient_name(ingredient):
 
-    # Remove quantities and measurements
     words = ingredient.split()
 
     measurements = [
@@ -16,7 +15,10 @@ def clean_ingredient_name(ingredient):
         "tablespoon",
         "teaspoon",
         "to",
-        "taste"
+        "taste",
+        "¼",
+        "½",
+        "¾"
     ]
 
     cleaned = []
@@ -33,6 +35,7 @@ def clean_ingredient_name(ingredient):
 def ingredient_agent(ingredients):
 
     nutrition_results = []
+
 
     total = {
 
@@ -55,8 +58,8 @@ def ingredient_agent(ingredients):
 
 
         nutrition = nutrition_agent(
-    name
-)
+            name
+        )
 
 
         if "error" not in nutrition:
