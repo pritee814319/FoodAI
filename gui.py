@@ -27,7 +27,7 @@ if st.button("Analyze Food"):
 
             try:
 
-                result = manager_agent(food)
+                result = manager_agent(food , people)
 
              
                 st.success("Analysis Complete!")
