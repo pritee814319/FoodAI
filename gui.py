@@ -6,21 +6,33 @@ from agents.nutrition_agent import nutrition_agent
 st.title("🍲 FoodAI Nutrition Agent")
 
 
-dish = st.text_input(
-    "Enter food name",
-    placeholder="Example: apple, chicken breast"
+food = st.text_input(
+    "Enter food",
+    placeholder="Example: pizza, apple, chicken"
+)
+
+
+grams = st.number_input(
+    "Quantity (grams)",
+    min_value=1,
+    value=100
 )
 
 
 if st.button("Analyze"):
 
-    if dish:
+    if food:
 
-        result = nutrition_agent(dish)
+        result = nutrition_agent(
+            food,
+            grams
+        )
 
         st.subheader("Nutrition Information")
 
         st.json(result)
 
     else:
-        st.warning("Please enter a food name")
+        st.warning(
+            "Please enter food name"
+        )
