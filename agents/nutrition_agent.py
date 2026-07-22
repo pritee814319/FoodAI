@@ -1,105 +1,55 @@
-from api.usda_client import search_food
+from api.usda_client import search_usda_food
 
 
-def get_nutrient_value(nutrients, name):
+def nutrition_agent(food):
 
-    for nutrient in nutrients:
+    try:
 
-        if nutrient["nutrientName"] == name:
-            return nutrient["value"]
-
-    return 0
+        result = search_usda_food(food)
 
 
+        # USDA error handling
+        if "error" in result:
 
-def nutrition_agent(food, grams=100):
+            return {
 
-    result = search_food(food)
+                "food": food,
 
-    if not result:
+                "nutrition": {},
+
+                "message": result["error"]
+
+            }
+
+
         return {
-            "error": "Food not found"
+
+            "food": result.get(
+                "food",
+                food
+            ),
+
+            "nutrition": result.get(
+                "nutrition",
+                {}
+            ),
+
+            "source": result.get(
+                "source",
+                "USDA FoodData Central"
+            )
+
         }
 
 
-    nutrients = result["foodNutrients"]
+    except Exception as e:
 
+        return {
 
-    multiplier = grams / 100
+            "food": food,
 
+            "nutrition": {},
 
-    nutrition_report = {
+            "error": str(e)
 
-        "Food": result["description"],
-
-        "Serving Size (g)": grams,
-
-
-        "Calories (kcal)": round(
-            get_nutrient_value(
-                nutrients,
-                "Energy"
-            ) * multiplier,
-            2
-        ),
-
-
-        "Protein (g)": round(
-            get_nutrient_value(
-                nutrients,
-                "Protein"
-            ) * multiplier,
-            2
-        ),
-
-
-        "Carbohydrates (g)": round(
-            get_nutrient_value(
-                nutrients,
-                "Carbohydrate, by difference"
-            ) * multiplier,
-            2
-        ),
-
-
-        "Fat (g)": round(
-            get_nutrient_value(
-                nutrients,
-                "Total lipid (fat)"
-            ) * multiplier,
-            2
-        ),
-
-
-        "Fiber (g)": round(
-            get_nutrient_value(
-                nutrients,
-                "Fiber, total dietary"
-            ) * multiplier,
-            2
-        ),
-
-
-        "Sugar (g)": round(
-            get_nutrient_value(
-                nutrients,
-                "Total Sugars"
-            ) * multiplier,
-            2
-        ),
-
-
-        "Sodium (mg)": round(
-            get_nutrient_value(
-                nutrients,
-                "Sodium, Na"
-            ) * multiplier,
-            2
-        ),
-
-
-        "Source": "USDA FoodData Central"
-    }
-
-
-    return nutrition_report
+        }
