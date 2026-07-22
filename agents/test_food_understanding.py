@@ -1,23 +1,23 @@
-
 from agents.food_understanding_agent import food_understanding_agent
 
 
-tests = [
+foods = [
 
-    "chicken handi",
+    "vada",
 
-    "chicken hundi",
+    "misal",
 
-    "butter chiken",
+    "ramen",
 
-    "PIZZA",
+    "pizza",
 
-    "sushi"
+    "butter chicken"
 
 ]
 
+for food in foods:
 
-for food in tests:
+    print("\n===================")
 
     result = food_understanding_agent(food)
 
