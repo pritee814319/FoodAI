@@ -1,25 +1,72 @@
 from api.usda_client import search_food
 
 
+def get_nutrient_value(nutrients, name):
+
+    for nutrient in nutrients:
+
+        if nutrient["nutrientName"] == name:
+            return nutrient["value"]
+
+    return 0
+
+
+
 def nutrition_agent(food):
 
     result = search_food(food)
+
 
     if not result:
         return {
             "error": "Food not found"
         }
 
-    nutrients = {}
 
-    for item in result["foodNutrients"]:
-        name = item["nutrientName"]
-        value = item["value"]
+    nutrients = result["foodNutrients"]
 
-        nutrients[name] = value
 
-    return {
-        "food": result["description"],
-        "nutrition": nutrients,
-        "source": "USDA FoodData Central"
+    nutrition_report = {
+
+        "Food": result["description"],
+
+        "Calories (kcal)": get_nutrient_value(
+            nutrients,
+            "Energy"
+        ),
+
+        "Protein (g)": get_nutrient_value(
+            nutrients,
+            "Protein"
+        ),
+
+        "Carbohydrates (g)": get_nutrient_value(
+            nutrients,
+            "Carbohydrate, by difference"
+        ),
+
+        "Fat (g)": get_nutrient_value(
+            nutrients,
+            "Total lipid (fat)"
+        ),
+
+        "Fiber (g)": get_nutrient_value(
+            nutrients,
+            "Fiber, total dietary"
+        ),
+
+        "Sugar (g)": get_nutrient_value(
+            nutrients,
+            "Total Sugars"
+        ),
+
+        "Sodium (mg)": get_nutrient_value(
+            nutrients,
+            "Sodium, Na"
+        ),
+
+        "Source": "USDA FoodData Central"
     }
+
+
+    return nutrition_report
