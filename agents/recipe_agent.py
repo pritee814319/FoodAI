@@ -1,49 +1,46 @@
-import requests
+from api.mealdb_client import search_recipes
 
 
 def recipe_agent(food):
 
-    url = "https://www.themealdb.com/api/json/v1/1/search.php"
+    meals = search_recipes(food)
 
-
-    params = {
-        "s": food
-    }
-
-
-    response = requests.get(
-        url,
-        params=params
-    )
-
-
-    data = response.json()
-
-
-    if not data["meals"]:
+    if not meals:
         return {
             "error": "No recipes found"
         }
 
-
     recipes = []
 
+    for meal in meals[:5]:
 
-    for meal in data["meals"][:5]:
+        ingredients = []
+
+        for i in range(1, 21):
+
+            ingredient = meal.get(f"strIngredient{i}")
+            measure = meal.get(f"strMeasure{i}")
+
+            if ingredient and ingredient.strip():
+
+                ingredients.append(
+                    f"{measure.strip()} {ingredient.strip()}"
+                )
 
         recipes.append({
 
             "Recipe": meal["strMeal"],
 
+            "Cuisine": meal["strArea"],
+
             "Category": meal["strCategory"],
 
-            "Cuisine": meal["strArea"],
+            "Ingredients": ingredients,
 
             "Instructions": meal["strInstructions"],
 
             "Image": meal["strMealThumb"]
 
         })
-
 
     return recipes
