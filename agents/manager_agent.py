@@ -4,27 +4,19 @@ from agents.ingredient_agent import ingredient_agent
 
 def manager_agent(food):
 
-    result = {
-
-        "query": food,
-
-        "recipes": None,
-
-        "nutrition": None
-
-    }
+    print("START MANAGER:", food)
 
 
-    # Find recipes
     recipes = recipe_agent(food)
 
-    result["recipes"] = recipes
+    print("RECIPES FOUND:", len(recipes) if recipes else 0)
 
 
-    # Analyze nutrition from first recipe
     if recipes and isinstance(recipes, list):
 
         first_recipe = recipes[0]
+
+        print("FIRST RECIPE:", first_recipe["Recipe"])
 
 
         ingredients = first_recipe.get(
@@ -32,20 +24,23 @@ def manager_agent(food):
             []
         )
 
+        print("INGREDIENT COUNT:", len(ingredients))
+
 
         nutrition = ingredient_agent(
             ingredients
         )
 
+        print("NUTRITION DONE")
 
-        result["nutrition"] = nutrition
 
-
-    else:
-
-        result["nutrition"] = {
-            "error": "No recipe found"
+        return {
+            "query": food,
+            "recipes": recipes,
+            "nutrition": nutrition
         }
 
 
-    return result
+    return {
+        "error": "No recipe found"
+    }
