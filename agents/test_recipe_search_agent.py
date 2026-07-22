@@ -1,41 +1,51 @@
-
-from agents.recipe_agent import recipe_agent
-
-
-def recipe_search_agent(food):
-
-    print("RECIPE SEARCH:", food)
+from agents.recipe_search_agent import recipe_search_agent
 
 
-    recipes = recipe_agent(food)
+foods = [
+
+    "Chicken Handi",
+
+    "Pizza",
+
+    "Sushi",
+
+    "Pasta"
+
+]
 
 
-    if not recipes:
+for food in foods:
 
-        return {
+    print("\n====================")
 
-            "query": food,
-
-            "recipes": [],
-
-            "source": "No recipe found"
-
-        }
+    print("SEARCH:", food)
 
 
-    # Keep top 5 recipes
-
-    top_recipes = recipes[:5]
+    result = recipe_search_agent(food)
 
 
-    return {
+    print(
+        "SOURCE:",
+        result["source"]
+    )
 
-        "query": food,
 
-        "count": len(top_recipes),
+    print(
+        "RECIPES FOUND:",
+        result["count"]
+        if "count" in result
+        else 0
+    )
 
-        "recipes": top_recipes,
 
-        "source": "TheMealDB"
+    for recipe in result.get(
+        "recipes",
+        []
+    ):
 
-    }
+        print(
+            "-",
+            recipe.get(
+                "Recipe"
+            )
+        )
