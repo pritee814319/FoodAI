@@ -29,12 +29,7 @@ if st.button("Analyze Food"):
 
                 result = manager_agent(food)
 
-
-                # DEBUG
-                st.subheader("DEBUG RESULT")
-                st.json(result)
-
-
+             
                 st.success("Analysis Complete!")
 
 
