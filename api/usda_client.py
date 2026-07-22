@@ -25,10 +25,10 @@ def search_food(food_name):
         "pageSize": 1
     }
 
-    response = requests.get(
-        url,
-        params=params
-    )
+    response = requests.get(url, params=params)
+
+    print("STATUS:", response.status_code)
+    print("RESULT:", response.text[:500])
 
     data = response.json()
 
