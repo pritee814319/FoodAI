@@ -3,39 +3,162 @@ import streamlit as st
 from agents.manager_agent import manager_agent
 
 
+# Page setup
+st.set_page_config(
+    page_title="FoodAI",
+    page_icon="🍲"
+)
+
+
 st.title("🍲 FoodAI")
+st.write("AI Food Nutrition & Recipe Analyzer")
 
-food = st.text_input("Enter food")
+
+# User input
+food = st.text_input(
+    "Enter food name",
+    placeholder="Example: Chicken Handi"
+)
 
 
-if st.button("Analyze"):
+if st.button("Analyze Food"):
 
-    if food:
+    if food.strip():
 
-      def manager_agent(food):
+        with st.spinner("FoodAI agents are working..."):
 
-        st.subheader("Nutrition Information")
-        st.json( 
-            result["nutrition"]["Total Nutrition"] )
+            try:
 
-        st.subheader("Top Recipes")
+                # Call Manager Agent
+                result = manager_agent(food)
 
-        if isinstance(result["recipes"], dict) and "error" in result["recipes"]:
-            st.warning(result["recipes"]["error"])
-        else:
-            for recipe in result["recipes"]:
-                st.markdown(f"### {recipe['Recipe']}")
-                st.write(f"**Cuisine:** {recipe['Cuisine']}")
-                st.write(f"**Category:** {recipe['Category']}")
 
-                with st.expander("Ingredients"):
-                    for ingredient in recipe["Ingredients"]:
-                        st.write(f"- {ingredient}")
+                st.success("Analysis Complete!")
 
-                with st.expander("Instructions"):
-                    st.write(recipe["Instructions"])
 
-                st.image(recipe["Image"], width=300)
+                # ------------------------
+                # Nutrition Section
+                # ------------------------
+
+                st.subheader("🥗 Nutrition Information")
+
+
+                if (
+                    "nutrition" in result
+                    and result["nutrition"]
+                ):
+
+                    total_nutrition = result["nutrition"].get(
+                        "Total Nutrition",
+                        {}
+                    )
+
+                    st.json(
+                        total_nutrition
+                    )
+
+                else:
+
+                    st.warning(
+                        "Nutrition information not available"
+                    )
+
+
+                # ------------------------
+                # Recipe Section
+                # ------------------------
+
+                st.subheader("🍛 Top Recipes")
+
+
+                recipes = result.get(
+                    "recipes",
+                    []
+                )
+
+
+                if recipes:
+
+                    for recipe in recipes:
+
+                        with st.expander(
+                            recipe.get(
+                                "Recipe",
+                                "Recipe"
+                            )
+                        ):
+
+                            st.write(
+                                "Cuisine:",
+                                recipe.get(
+                                    "Cuisine",
+                                    ""
+                                )
+                            )
+
+                            st.write(
+                                "Category:",
+                                recipe.get(
+                                    "Category",
+                                    ""
+                                )
+                            )
+
+
+                            st.subheader(
+                                "Ingredients"
+                            )
+
+                            for item in recipe.get(
+                                "Ingredients",
+                                []
+                            ):
+
+                                st.write(
+                                    "-",
+                                    item
+                                )
+
+
+                            st.subheader(
+                                "Instructions"
+                            )
+
+                            st.write(
+                                recipe.get(
+                                    "Instructions",
+                                    ""
+                                )
+                            )
+
+
+                            image = recipe.get(
+                                "Image"
+                            )
+
+                            if image:
+
+                                st.image(
+                                    image,
+                                    width=400
+                                )
+
+                else:
+
+                    st.warning(
+                        "No recipes found"
+                    )
+
+
+            except Exception as e:
+
+                st.error(
+                    f"FoodAI Error: {e}"
+                )
+
 
     else:
-        st.warning("Please enter a food name.")
+
+        st.warning(
+            "Please enter a food name"
+        )
