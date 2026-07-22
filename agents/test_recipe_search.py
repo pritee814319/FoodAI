@@ -1,4 +1,4 @@
-from agents.recipe_search_agent import recipe_search_agent
+from agents.recipe_search import recipe_search_agent
 
 
 foods = [
