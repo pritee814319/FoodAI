@@ -24,10 +24,10 @@ if st.button("Analyze"):
 
         st.subheader("Top Recipes")
 
-        if isinstance(result["recipe"], dict) and "error" in result["recipe"]:
-            st.warning(result["recipe"]["error"])
+        if isinstance(result["recipes"], dict) and "error" in result["recipes"]:
+            st.warning(result["recipes"]["error"])
         else:
-            for recipe in result["recipe"]:
+            for recipe in result["recipes"]:
                 st.markdown(f"### {recipe['Recipe']}")
                 st.write(f"**Cuisine:** {recipe['Cuisine']}")
                 st.write(f"**Category:** {recipe['Category']}")
