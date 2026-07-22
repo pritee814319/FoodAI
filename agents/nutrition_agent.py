@@ -12,7 +12,7 @@ def get_nutrient_value(nutrients, name):
 
 
 
-def nutrition_agent(food):
+def nutrition_agent(food, grams=100):
 
     result = search_food(food)
 
@@ -25,44 +25,78 @@ def nutrition_agent(food):
     nutrients = result["foodNutrients"]
 
 
+    multiplier = grams / 100
+
+
     nutrition_report = {
 
         "Food": result["description"],
 
-        "Calories (kcal)": get_nutrient_value(
-            nutrients,
-            "Energy"
+        "Serving Size (g)": grams,
+
+
+        "Calories (kcal)": round(
+            get_nutrient_value(
+                nutrients,
+                "Energy"
+            ) * multiplier,
+            2
         ),
 
-        "Protein (g)": get_nutrient_value(
-            nutrients,
-            "Protein"
+
+        "Protein (g)": round(
+            get_nutrient_value(
+                nutrients,
+                "Protein"
+            ) * multiplier,
+            2
         ),
 
-        "Carbohydrates (g)": get_nutrient_value(
-            nutrients,
-            "Carbohydrate, by difference"
+
+        "Carbohydrates (g)": round(
+            get_nutrient_value(
+                nutrients,
+                "Carbohydrate, by difference"
+            ) * multiplier,
+            2
         ),
 
-        "Fat (g)": get_nutrient_value(
-            nutrients,
-            "Total lipid (fat)"
+
+        "Fat (g)": round(
+            get_nutrient_value(
+                nutrients,
+                "Total lipid (fat)"
+            ) * multiplier,
+            2
         ),
 
-        "Fiber (g)": get_nutrient_value(
-            nutrients,
-            "Fiber, total dietary"
+
+        "Fiber (g)": round(
+            get_nutrient_value(
+                nutrients,
+                "Fiber, total dietary"
+            ) * multiplier,
+            2
         ),
 
-        "Sugar (g)": get_nutrient_value(
-            nutrients,
-            "Total Sugars"
+
+        "Sugar (g)": round(
+            get_nutrient_value(
+                nutrients,
+                "Total Sugars"
+            ) * multiplier,
+            2
         ),
 
-        "Sodium (mg)": get_nutrient_value(
-            nutrients,
-            "Sodium, Na"
+
+        "Sodium (mg)": round(
+            get_nutrient_value(
+                nutrients,
+                "Sodium, Na"
+            ) * multiplier,
+            2
         ),
+
 
         "Source": "USDA FoodData Central"
     }
