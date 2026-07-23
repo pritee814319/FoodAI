@@ -1,6 +1,8 @@
 from tavily import TavilyClient
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 
 def search_web_recipes(food):
