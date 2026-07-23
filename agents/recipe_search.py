@@ -61,7 +61,8 @@ def recipe_search_agent(food):
                 "Web search error:",
                 e
             )
-
+print("DEBUG RECIPES:")
+print(recipes)
 
 
  return {
