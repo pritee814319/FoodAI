@@ -1,93 +1,48 @@
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import quote
+from tavily import TavilyClient
+import os
 
 
 
 def search_web_recipes(food):
 
 
-    query = quote(
-        f"{food} recipe"
-    )
-
-
-    url = (
-        "https://html.duckduckgo.com/html/?q="
-        + query
-    )
-
-
-    headers = {
-
-        "User-Agent":
-        "Mozilla/5.0"
-
-    }
-
-
-    response = requests.get(
-        url,
-        headers=headers,
-        timeout=15
-    )
-
-
-    if response.status_code != 200:
-
-        print(
-            "SEARCH STATUS:",
-            response.status_code
+    client = TavilyClient(
+        api_key=os.getenv(
+            "TAVILY_API_KEY"
         )
-
-        return []
-
+    )
 
 
-    soup = BeautifulSoup(
-        response.text,
-        "html.parser"
+    response = client.search(
+
+        query=f"{food} recipe ingredients instructions",
+
+        max_results=5
+
     )
 
 
     results = []
 
 
-
-    for result in soup.select(
-        ".result"
-    )[:5]:
+    for item in response["results"]:
 
 
-        title = result.select_one(
-            ".result__a"
-        )
+        results.append({
 
+            "title":
+                item["title"],
 
-        snippet = result.select_one(
-            ".result__snippet"
-        )
+            "url":
+                item["url"],
 
+            "content":
+                item.get(
+                    "content",
+                    ""
+                )
 
-        if title:
-
-
-            results.append({
-
-                "title":
-                    title.get_text(),
-
-                "url":
-                    title.get(
-                        "href"
-                    ),
-
-                "snippet":
-                    snippet.get_text()
-                    if snippet
-                    else ""
-
-            })
+        })
 
 
     return results
