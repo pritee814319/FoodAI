@@ -3,10 +3,14 @@ from api.web_search_client import search_web_recipes
 
 def web_recipe_agent(food):
 
+    print("WEB SEARCH START:", food)
 
-    results = search_web_recipes(
-        food
-    )
+
+    results = search_web_recipes(food)
+
+
+    print("TAVILY RESULTS:")
+    print(results)
 
 
     recipes = []
@@ -15,25 +19,32 @@ def web_recipe_agent(food):
     for item in results:
 
 
-        # Make sure every recipe is a dictionary
+        recipes.append({
 
-        if isinstance(item, dict):
+            "Recipe": item.get(
+                "title",
+                "Unknown Recipe"
+            ),
 
-            recipes.append({
+            "URL": item.get(
+                "url",
+                ""
+            ),
 
-                "Recipe": item.get(
-                    "title",
-                    "Unknown Recipe"
-                ),
+            "Description": item.get(
+                "content",
+                ""
+            ),
 
-                "URL": item.get(
-                    "url",
-                    ""
-                ),
+            "Source": "Tavily"
 
-                "Source": "Internet"
+        })
 
-            })
+
+    print(
+        "WEB RECIPES FOUND:",
+        len(recipes)
+    )
 
 
     return recipes
