@@ -5,11 +5,13 @@ foods = [
 
     "Chicken Handi",
 
+    "Misal",
+
     "Pizza",
 
     "Sushi",
 
-    "Pasta"
+    "Ramen"
 
 ]
 
@@ -18,23 +20,21 @@ for food in foods:
 
     print("\n====================")
 
-    print("SEARCH:", food)
+    print(
+        "SEARCH:",
+        food
+    )
 
 
     result = recipe_search_agent(food)
 
 
     print(
-        "SOURCE:",
-        result["source"]
-    )
-
-
-    print(
         "RECIPES FOUND:",
-        result["count"]
-        if "count" in result
-        else 0
+        result.get(
+            "count",
+            0
+        )
     )
 
 
@@ -46,6 +46,18 @@ for food in foods:
         print(
             "-",
             recipe.get(
-                "Recipe"
+                "Recipe",
+                recipe.get(
+                    "title",
+                    "Unknown"
+                )
             )
         )
+
+
+        if recipe.get("URL"):
+
+            print(
+                "URL:",
+                recipe["URL"]
+            )
