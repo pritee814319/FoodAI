@@ -1,7 +1,6 @@
 from api.web_search_client import search_web_recipes
 
 
-
 def web_recipe_agent(food):
 
 
@@ -15,18 +14,26 @@ def web_recipe_agent(food):
 
     for item in results:
 
-        recipes.append({
 
-            "Recipe":
-                item["title"],
+        # Make sure every recipe is a dictionary
 
-            "URL":
-                item["url"],
+        if isinstance(item, dict):
 
-            "Source":
-                "Web"
+            recipes.append({
 
-        })
+                "Recipe": item.get(
+                    "title",
+                    "Unknown Recipe"
+                ),
+
+                "URL": item.get(
+                    "url",
+                    ""
+                ),
+
+                "Source": "Internet"
+
+            })
 
 
     return recipes
