@@ -15,16 +15,21 @@ def recipe_search_agent(food):
     recipes = []
 
 
-    # 1. TheMealDB
+    # -----------------------
+    # Source 1: TheMealDB
+    # -----------------------
 
     try:
 
-        mealdb = recipe_agent(food)
+        mealdb_results = recipe_agent(
+            food
+        )
 
-        if mealdb:
+
+        if mealdb_results:
 
             recipes.extend(
-                mealdb
+                mealdb_results
             )
 
 
@@ -37,21 +42,24 @@ def recipe_search_agent(food):
 
 
 
-    # 2. Internet fallback
+    # -----------------------
+    # Source 2: Internet Search
+    # -----------------------
 
     if len(recipes) < 5:
 
 
         try:
 
-            web = web_recipe_agent(
+            web_results = web_recipe_agent(
                 food
             )
 
-            if web:
+
+            if web_results:
 
                 recipes.extend(
-                    web
+                    web_results
                 )
 
 
@@ -61,16 +69,52 @@ def recipe_search_agent(food):
                 "Web search error:",
                 e
             )
-print("DEBUG RECIPES:")
-print(recipes)
 
 
- return {
 
-    "query": food,
+    # -----------------------
+    # Remove duplicates
+    # -----------------------
 
-    "count": len(recipes[:5]),
+    final_recipes = []
 
-    "recipes": recipes[:5]
+    names = set()
 
-}
+
+    for recipe in recipes:
+
+
+        if isinstance(recipe, dict):
+
+
+            name = recipe.get(
+                "Recipe",
+                "Unknown"
+            )
+
+
+            if name not in names:
+
+                names.add(name)
+
+                final_recipes.append(
+                    recipe
+                )
+
+
+
+    print(
+        "TOTAL RECIPES:",
+        len(final_recipes)
+    )
+
+
+    return {
+
+        "query": food,
+
+        "count": len(final_recipes),
+
+        "recipes": final_recipes[:5]
+
+    }
