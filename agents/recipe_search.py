@@ -64,12 +64,12 @@ def recipe_search_agent(food):
 
 
 
-    return {
+ return {
 
-        "query": food,
+    "query": food,
 
-        "count": len(recipes),
+    "count": len(recipes[:5]),
 
-        "recipes": recipes[:5]
+    "recipes": recipes[:5]
 
-    }
+}
