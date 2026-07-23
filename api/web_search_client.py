@@ -3,10 +3,12 @@ from bs4 import BeautifulSoup
 from urllib.parse import quote
 
 
+
 def search_web_recipes(food):
 
+
     query = quote(
-        food + " recipe ingredients instructions"
+        f"{food} recipe"
     )
 
 
@@ -27,13 +29,19 @@ def search_web_recipes(food):
     response = requests.get(
         url,
         headers=headers,
-        timeout=10
+        timeout=15
     )
 
 
     if response.status_code != 200:
 
+        print(
+            "SEARCH STATUS:",
+            response.status_code
+        )
+
         return []
+
 
 
     soup = BeautifulSoup(
@@ -45,24 +53,41 @@ def search_web_recipes(food):
     results = []
 
 
-    for link in soup.select(
-        ".result__a"
+
+    for result in soup.select(
+        ".result"
     )[:5]:
 
-        title = link.text
 
-        href = link.get(
-            "href"
+        title = result.select_one(
+            ".result__a"
         )
 
 
-        results.append({
+        snippet = result.select_one(
+            ".result__snippet"
+        )
 
-            "title": title,
 
-            "url": href
+        if title:
 
-        })
+
+            results.append({
+
+                "title":
+                    title.get_text(),
+
+                "url":
+                    title.get(
+                        "href"
+                    ),
+
+                "snippet":
+                    snippet.get_text()
+                    if snippet
+                    else ""
+
+            })
 
 
     return results
