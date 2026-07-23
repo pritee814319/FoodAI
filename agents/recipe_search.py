@@ -1,41 +1,75 @@
-
 from agents.recipe_agent import recipe_agent
+from agents.web_recipe_agent import web_recipe_agent
+
 
 
 def recipe_search_agent(food):
 
-    print("RECIPE SEARCH:", food)
+
+    print(
+        "RECIPE SEARCH:",
+        food
+    )
 
 
-    recipes = recipe_agent(food)
+    recipes = []
 
 
-    if not recipes:
+    # 1. TheMealDB
 
-        return {
+    try:
 
-            "query": food,
+        mealdb = recipe_agent(food)
 
-            "recipes": [],
+        if mealdb:
 
-            "source": "No recipe found"
+            recipes.extend(
+                mealdb
+            )
 
-        }
+
+    except Exception as e:
+
+        print(
+            "MealDB error:",
+            e
+        )
 
 
-    # Keep top 5 recipes
 
-    top_recipes = recipes[:5]
+    # 2. Internet fallback
+
+    if len(recipes) < 5:
+
+
+        try:
+
+            web = web_recipe_agent(
+                food
+            )
+
+            if web:
+
+                recipes.extend(
+                    web
+                )
+
+
+        except Exception as e:
+
+            print(
+                "Web search error:",
+                e
+            )
+
 
 
     return {
 
         "query": food,
 
-        "count": len(top_recipes),
+        "count": len(recipes),
 
-        "recipes": top_recipes,
-
-        "source": "TheMealDB"
+        "recipes": recipes[:5]
 
     }
