@@ -3,138 +3,114 @@ import requests
 import re
 
 
+USDA_KEY = os.getenv("USDA_API_KEY")
 
-USDA_KEY = os.getenv(
-    "USDA_API_KEY"
-)
-
-
-
-USDA_URL = (
-    "https://api.nal.usda.gov/fdc/v1/foods/search"
-)
+USDA_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 
 
 
+def clean_name(text):
+
+    text = text.lower()
+
+    text = re.sub(
+        r"[^a-z\s]",
+        "",
+        text
+    )
+
+    remove = [
+        "chopped",
+        "finely",
+        "diced",
+        "fresh",
+        "medium",
+        "small",
+        "large",
+        "optional",
+        "to taste"
+    ]
+
+    for word in remove:
+        text = text.replace(
+            word,
+            ""
+        )
+
+    return text.strip()
 
 
-def clean_ingredient_name(text):
 
+def extract_quantity(text):
 
-    if not text:
-
-        return ""
-
-
+    """
+    Convert recipe quantity into approximate grams
+    """
 
     text = text.lower()
 
 
+    # cups
 
-    # remove bullets
-
-    text = text.replace(
-        "▢",
-        ""
-    )
-
-
-
-    # remove fractions and numbers
-
-    text = re.sub(
-
-        r"\d+[\d\/½¼¾⅓⅔⅛⅜⅝⅞]*",
-
-        "",
-
+    cup = re.search(
+        r"(\d+\.?\d*)\s*(cup|cups)",
         text
-
     )
 
+    if cup:
 
-
-    # remove measurements
-
-    measurements = [
-
-        "cup",
-        "cups",
-        "tbsp",
-        "tablespoon",
-        "tablespoons",
-        "tsp",
-        "teaspoon",
-        "teaspoons",
-        "kg",
-        "g",
-        "gram",
-        "grams",
-        "ml",
-        "inch",
-        "clove",
-        "cloves"
-
-    ]
+        return float(cup.group(1)) * 120
 
 
 
-    for m in measurements:
+    # tablespoons
+
+    tbsp = re.search(
+        r"(\d+\.?\d*)\s*(tbsp|tablespoon)",
+        text
+    )
+
+    if tbsp:
+
+        return float(
+            tbsp.group(1)
+        ) * 15
 
 
-        text = text.replace(
 
-            m,
+    # teaspoons
 
-            ""
+    tsp = re.search(
+        r"(\d+\.?\d*)\s*(tsp|teaspoon)",
+        text
+    )
 
+    if tsp:
+
+        return float(
+            tsp.group(1)
+        ) * 5
+
+
+
+    # grams
+
+    gram = re.search(
+        r"(\d+)\s*g",
+        text
+    )
+
+    if gram:
+
+        return float(
+            gram.group(1)
         )
 
 
 
-    # remove cooking words
+    # default assumption
 
-    remove_words = [
-
-        "finely chopped",
-        "chopped",
-        "diced",
-        "optional",
-        "fresh",
-        "small",
-        "medium",
-        "large",
-        "to taste"
-
-    ]
-
-
-
-    for word in remove_words:
-
-
-        text = text.replace(
-
-            word,
-
-            ""
-
-        )
-
-
-
-    text = re.sub(
-
-        r"[^a-z\s]",
-
-        "",
-
-        text
-
-    )
-
-
-    return text.strip()
+    return 100
 
 
 
@@ -143,20 +119,7 @@ def clean_ingredient_name(text):
 def search_usda(food):
 
 
-    if not USDA_KEY:
-
-
-        print(
-            "NO USDA KEY"
-        )
-
-        return None
-
-
-
-
     try:
-
 
         response = requests.get(
 
@@ -164,52 +127,39 @@ def search_usda(food):
 
             params={
 
-                "api_key":
-                USDA_KEY,
+                "api_key": USDA_KEY,
 
-                "query":
-                food,
+                "query": food,
 
-                "pageSize":
-                1
+                "pageSize": 1
 
             },
 
-            timeout=15
+            timeout=10
 
         )
-
 
 
         data = response.json()
 
 
-
         foods = data.get(
-
             "foods",
-
             []
-
         )
-
 
 
         if foods:
 
-
             return foods[0]
-
 
 
     except Exception as e:
 
-
         print(
-            "USDA ERROR:",
+            "USDA ERROR",
             e
         )
-
 
 
     return None
@@ -218,11 +168,10 @@ def search_usda(food):
 
 
 
-def get_nutrients(food):
+def nutrients_from_food(food, grams):
 
 
-    nutrients = {
-
+    result = {
 
         "Calories (kcal)":0,
 
@@ -241,101 +190,76 @@ def get_nutrients(food):
     }
 
 
-
     if not food:
 
-
-        return nutrients
-
+        return result
 
 
 
-    for item in food.get(
+    factor = grams / 100
 
+
+
+    for n in food.get(
         "foodNutrients",
-
         []
-
     ):
 
 
-        name = item.get(
-
+        name = n.get(
             "nutrientName",
-
             ""
-
         )
 
 
-
-        value = item.get(
-
+        value = n.get(
             "value",
-
             0
-
         )
+
+
+
+        value = value * factor
 
 
 
         if name == "Energy":
 
-            nutrients[
-                "Calories (kcal)"
-            ] = value
-
+            result["Calories (kcal)"] = round(value,2)
 
 
         elif name == "Protein":
 
-            nutrients[
-                "Protein (g)"
-            ] = value
-
+            result["Protein (g)"] = round(value,2)
 
 
         elif name == "Carbohydrate, by difference":
 
-            nutrients[
-                "Carbohydrates (g)"
-            ] = value
-
+            result["Carbohydrates (g)"] = round(value,2)
 
 
         elif name == "Total lipid (fat)":
 
-            nutrients[
-                "Fat (g)"
-            ] = value
-
+            result["Fat (g)"] = round(value,2)
 
 
         elif name == "Fiber, total dietary":
 
-            nutrients[
-                "Fiber (g)"
-            ] = value
-
+            result["Fiber (g)"] = round(value,2)
 
 
         elif name == "Sugars, total including NLEA":
 
-            nutrients[
-                "Sugar (g)"
-            ] = value
-
+            result["Sugar (g)"] = round(value,2)
 
 
         elif name == "Sodium, Na":
 
-            nutrients[
-                "Sodium (mg)"
-            ] = value
+            result["Sodium (mg)"] = round(value,2)
 
 
 
-    return nutrients
+    return result
 
 
 
@@ -344,27 +268,14 @@ def get_nutrients(food):
 def ingredient_agent(ingredients):
 
 
-    print(
-        "INGREDIENT AGENT START"
-    )
-
-
-
     total = {
 
-
         "Calories (kcal)":0,
-
         "Protein (g)":0,
-
         "Carbohydrates (g)":0,
-
         "Fat (g)":0,
-
         "Fiber (g)":0,
-
         "Sugar (g)":0,
-
         "Sodium (mg)":0
 
     }
@@ -374,62 +285,62 @@ def ingredient_agent(ingredients):
     for item in ingredients:
 
 
-
-        clean_name = clean_ingredient_name(
-
-            item
-
-        )
-
-
-
-        if not clean_name:
-
+        if not isinstance(item,str):
 
             continue
 
 
 
+        name = clean_name(item)
+
+
+        if not name:
+
+            continue
+
+
+
+        grams = extract_quantity(item)
+
+
+
         print(
-
-            "USDA SEARCH:",
-
-            clean_name
-
+            "INGREDIENT:",
+            name,
+            grams,
+            "g"
         )
 
 
 
         food = search_usda(
-
-            clean_name
-
+            name
         )
 
 
 
-        nutrients = get_nutrients(
-
-            food
-
+        nutrition = nutrients_from_food(
+            food,
+            grams
         )
 
 
 
         for key in total:
 
-
-            total[key] += nutrients[key]
-
-
+            total[key] += nutrition[key]
 
 
 
     return {
 
-
         "Total Nutrition":
 
-        total
+        {
+            k:round(v,2)
+
+            for k,v in total.items()
+
+        }
 
     }
