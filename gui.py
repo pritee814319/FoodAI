@@ -1,3 +1,10 @@
+
+import streamlit as st
+import matplotlib.pyplot as plt
+
+from agents.manager_agent import manager_agent
+from agents.food_image_agent import food_image_agent
+
 st.success("Analysis Complete!")
 
 # ---------------------------------------------------
@@ -124,49 +131,35 @@ with pc6:
 
 st.subheader("📊 Calories by Macronutrients")
 
-protein = total.get(
-    "Protein (g)",
-    0
-)
-
-carbs = total.get(
-    "Carbohydrates (g)",
-    0
-)
-
-fat = total.get(
-    "Fat (g)",
-    0
-)
+protein = total.get("Protein (g)", 0)
+carbs = total.get("Carbohydrates (g)", 0)
+fat = total.get("Fat (g)", 0)
 
 protein_cal = protein * 4
 carb_cal = carbs * 4
 fat_cal = fat * 9
 
-values = [
-    protein_cal,
-    carb_cal,
-    fat_cal
-]
+values = [protein_cal, carb_cal, fat_cal]
+labels = ["Protein", "Carbs", "Fat"]
 
-labels = [
-    "Protein",
-    "Carbs",
-    "Fat"
-]
+if sum(values) > 0:
 
-fig, ax = plt.subplots(figsize=(5,5))
+    fig, ax = plt.subplots(figsize=(5,5))
 
-ax.pie(
-    values,
-    labels=labels,
-    autopct="%1.1f%%",
-    startangle=90
-)
+    ax.pie(
+        values,
+        labels=labels,
+        autopct="%1.1f%%",
+        startangle=90
+    )
 
-ax.axis("equal")
+    ax.axis("equal")
 
-st.pyplot(fig)
+    st.pyplot(fig)
+
+else:
+
+    st.info("Nutrition chart unavailable.")
 
 st.divider()
 
