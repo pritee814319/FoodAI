@@ -14,11 +14,13 @@ def recipe_search_agent(food):
     recipes = []
 
 
-    # --------------------------------
-    # 1. Understand the food
-    # --------------------------------
+    # -----------------------------
+    # Food Understanding
+    # -----------------------------
 
-    food_info = food_understanding_agent(food)
+    food_info = food_understanding_agent(
+        food
+    )
 
 
     standard_name = food_info.get(
@@ -43,15 +45,10 @@ def recipe_search_agent(food):
     )
 
 
-    print(
-        "SEARCH TERMS:",
-        search_terms
-    )
 
-
-    # --------------------------------
-    # 2. Search TheMealDB
-    # --------------------------------
+    # -----------------------------
+    # TheMealDB
+    # -----------------------------
 
     try:
 
@@ -61,11 +58,6 @@ def recipe_search_agent(food):
 
 
         if mealdb_results:
-
-            print(
-                "MEALDB FOUND:",
-                len(mealdb_results)
-            )
 
             recipes.extend(
                 mealdb_results
@@ -81,9 +73,9 @@ def recipe_search_agent(food):
 
 
 
-    # --------------------------------
-    # 3. Search Web using Tavily
-    # --------------------------------
+    # -----------------------------
+    # Tavily Web Search
+    # -----------------------------
 
     for term in search_terms:
 
@@ -95,25 +87,12 @@ def recipe_search_agent(food):
 
         try:
 
-            print(
-                "WEB SEARCH:",
-                term
-            )
-
-
             web_results = web_recipe_agent(
                 term
             )
 
 
             if web_results:
-
-
-                print(
-                    "WEB FOUND:",
-                    len(web_results)
-                )
-
 
                 recipes.extend(
                     web_results
@@ -122,7 +101,6 @@ def recipe_search_agent(food):
 
         except Exception as e:
 
-
             print(
                 "WEB SEARCH ERROR:",
                 e
@@ -130,19 +108,64 @@ def recipe_search_agent(food):
 
 
 
-    # --------------------------------
-    # 4. Remove duplicates
-    # --------------------------------
+    # -----------------------------
+    # Remove bad sources
+    # -----------------------------
+
+    blocked_sites = [
+
+        "pinterest",
+        "youtube",
+        "facebook",
+        "instagram"
+
+    ]
+
+
+    filtered = []
+
+
+    for recipe in recipes:
+
+
+        url = recipe.get(
+            "URL",
+            ""
+        ).lower()
+
+
+
+        if any(
+            site in url
+            for site in blocked_sites
+        ):
+
+            continue
+
+
+
+        filtered.append(
+            recipe
+        )
+
+
+
+    # -----------------------------
+    # Remove duplicates
+    # -----------------------------
 
     final_recipes = []
 
     seen = set()
 
 
-    for recipe in recipes:
+    for recipe in filtered:
 
 
-        if not isinstance(recipe, dict):
+        if not isinstance(
+            recipe,
+            dict
+        ):
 
             continue
 
@@ -160,8 +183,9 @@ def recipe_search_agent(food):
 
         if key not in seen:
 
-
-            seen.add(key)
+            seen.add(
+                key
+            )
 
             final_recipes.append(
                 recipe
