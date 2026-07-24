@@ -48,8 +48,8 @@ print(
     try:
 
         mealdb_results = recipe_agent(
-            food_info["standard_name"]
-        )
+    standard_name
+)
 
         if mealdb_results:
 
@@ -71,7 +71,7 @@ print(
     # -----------------------------
     # Step 3: Search Internet
     # -----------------------------
-    for search_term in food_info["search_terms"]:
+  for search_term in search_terms:
 
         if len(recipes) >= 5:
             break
