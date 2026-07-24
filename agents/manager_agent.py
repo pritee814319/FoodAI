@@ -1,13 +1,13 @@
 from agents.recipe_search import recipe_search_agent
 from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_agent import ingredient_agent
+from agents.ingredient_cleaner import clean_ingredient
 
 
 
 def divide_nutrition(total, people):
 
     result = {}
-
 
     for key, value in total.items():
 
@@ -59,6 +59,7 @@ def manager_agent(food, people):
     )
 
 
+
     if not recipes:
 
 
@@ -82,16 +83,33 @@ def manager_agent(food, people):
     for recipe in recipes:
 
 
+        if not isinstance(
+            recipe,
+            dict
+        ):
+
+            continue
+
+
+
         try:
+
 
             parsed = recipe_parser_agent(
                 recipe
             )
 
 
-            parsed_recipes.append(
-                parsed
-            )
+
+            if parsed.get(
+                "Recipe"
+            ):
+
+
+                parsed_recipes.append(
+                    parsed
+                )
+
 
 
         except Exception as e:
@@ -103,27 +121,65 @@ def manager_agent(food, people):
             )
 
 
-            parsed_recipes.append(
-                recipe
-            )
+
+    if not parsed_recipes:
+
+
+        return {
+
+            "error":
+            "Recipe details could not be extracted"
+
+        }
 
 
 
-    # use first recipe for nutrition
+    # -----------------------------
+    # First recipe for nutrition
+    # -----------------------------
 
     first_recipe = parsed_recipes[0]
 
 
 
-    ingredients = first_recipe.get(
+    raw_ingredients = first_recipe.get(
         "Ingredients",
         []
     )
 
 
+
     print(
-        "INGREDIENT COUNT:",
-        len(ingredients)
+        "RAW INGREDIENTS:",
+        raw_ingredients
+    )
+
+
+
+    # Clean ingredients for USDA
+
+    ingredients = []
+
+
+    for item in raw_ingredients:
+
+
+        cleaned = clean_ingredient(
+            item
+        )
+
+
+        if cleaned:
+
+            ingredients.append(
+                cleaned
+            )
+
+
+
+    print(
+        "CLEAN INGREDIENTS:",
+        ingredients
     )
 
 
