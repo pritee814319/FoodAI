@@ -1,5 +1,6 @@
 import re
-from api.usda_client import get_food_nutrition
+
+from api.usda_client import search_usda_food
 
 
 
@@ -16,14 +17,12 @@ BAD_WORDS = [
     "table",
     "contents",
     "more",
-    "breakfast recipes",
     "tips",
     "variation",
-    "instruction",
-    "method",
-    "how to make",
     "published",
-    "updated"
+    "updated",
+    "author",
+    "subscribe"
 
 ]
 
@@ -41,10 +40,7 @@ def clean_ingredients(items):
     for item in items:
 
 
-        if not isinstance(
-            item,
-            str
-        ):
+        if not isinstance(item, str):
 
             continue
 
@@ -64,8 +60,6 @@ def clean_ingredients(items):
 
 
 
-        # remove unwanted webpage text
-
         if any(
             word in lower
             for word in BAD_WORDS
@@ -75,26 +69,11 @@ def clean_ingredients(items):
 
 
 
-        # remove urls
-
         if "http" in lower:
 
             continue
 
 
-
-        # remove social/share numbers
-
-        if re.search(
-            r"\d+k\s*shares",
-            lower
-        ):
-
-            continue
-
-
-
-        # remove duplicates
 
         if text.lower() in seen:
 
@@ -114,6 +93,95 @@ def clean_ingredients(items):
 
 
     return cleaned
+
+
+
+
+
+def extract_nutrition(usda_result):
+
+
+    nutrition = {
+
+        "Calories (kcal)": 0,
+
+        "Protein (g)": 0,
+
+        "Carbohydrates (g)": 0,
+
+        "Fat (g)": 0,
+
+        "Fiber (g)": 0,
+
+        "Sugar (g)": 0,
+
+        "Sodium (mg)": 0
+
+    }
+
+
+
+    if "nutrition" not in usda_result:
+
+        return nutrition
+
+
+
+    data = usda_result["nutrition"]
+
+
+
+    for key,value in data.items():
+
+
+        key_lower = key.lower()
+
+
+
+        if "energy" in key_lower:
+
+            nutrition["Calories (kcal)"] = value
+
+
+
+        elif "protein" in key_lower:
+
+            nutrition["Protein (g)"] = value
+
+
+
+        elif "carbohydrate" in key_lower:
+
+            nutrition["Carbohydrates (g)"] = value
+
+
+
+        elif "total lipid" in key_lower:
+
+            nutrition["Fat (g)"] = value
+
+
+
+        elif "fiber" in key_lower:
+
+            nutrition["Fiber (g)"] = value
+
+
+
+        elif "sugars" in key_lower:
+
+            nutrition["Sugar (g)"] = value
+
+
+
+        elif "sodium" in key_lower:
+
+            nutrition["Sodium (mg)"] = value
+
+
+
+    return nutrition
+
 
 
 
@@ -142,21 +210,7 @@ def ingredient_agent(ingredients):
 
 
 
-    print(
-        "CLEAN INGREDIENTS:"
-    )
-
-
-    for item in ingredients:
-
-        print(
-            item
-        )
-
-
-
     total = {
-
 
         "Calories (kcal)":0,
 
@@ -176,62 +230,34 @@ def ingredient_agent(ingredients):
 
 
 
-
     for ingredient in ingredients:
 
 
         try:
 
 
-            nutrition = get_food_nutrition(
+            print(
+                "USDA SEARCH:",
+                ingredient
+            )
+
+
+            result = search_usda_food(
                 ingredient
             )
 
 
 
-            if nutrition:
+            nutrition = extract_nutrition(
+                result
+            )
 
 
-                total["Calories (kcal)"] += nutrition.get(
-                    "Calories (kcal)",
-                    0
-                )
+
+            for key in total:
 
 
-                total["Protein (g)"] += nutrition.get(
-                    "Protein (g)",
-                    0
-                )
-
-
-                total["Carbohydrates (g)"] += nutrition.get(
-                    "Carbohydrates (g)",
-                    0
-                )
-
-
-                total["Fat (g)"] += nutrition.get(
-                    "Fat (g)",
-                    0
-                )
-
-
-                total["Fiber (g)"] += nutrition.get(
-                    "Fiber (g)",
-                    0
-                )
-
-
-                total["Sugar (g)"] += nutrition.get(
-                    "Sugar (g)",
-                    0
-                )
-
-
-                total["Sodium (mg)"] += nutrition.get(
-                    "Sodium (mg)",
-                    0
-                )
+                total[key] += nutrition[key]
 
 
 
@@ -245,9 +271,6 @@ def ingredient_agent(ingredients):
             )
 
 
-
-
-    # round values
 
     for key in total:
 
