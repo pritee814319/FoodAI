@@ -4,23 +4,69 @@ from agents.food_understanding_agent import food_understanding_agent
 
 
 
+def normalize_recipe(item):
+
+    """
+    Convert any recipe format into dictionary
+    """
+
+    if isinstance(item, dict):
+
+        return item
+
+
+    if isinstance(item, str):
+
+        return {
+
+            "Recipe": item,
+
+            "URL": "",
+
+            "Ingredients": [],
+
+            "Instructions": ""
+
+        }
+
+
+    return None
+
+
+
+
 def recipe_search_agent(food):
 
-    print("=" * 50)
+
+    print("=" * 40)
     print("RECIPE SEARCH:", food)
-    print("=" * 50)
+    print("=" * 40)
+
 
 
     recipes = []
 
 
-    # -----------------------------
-    # Food Understanding
-    # -----------------------------
 
-    food_info = food_understanding_agent(
-        food
-    )
+    # Food understanding
+
+    try:
+
+        food_info = food_understanding_agent(
+            food
+        )
+
+
+    except:
+
+        food_info = {
+
+            "standard_name": food,
+
+            "search_terms": [food]
+
+        }
+
 
 
     standard_name = food_info.get(
@@ -29,103 +75,116 @@ def recipe_search_agent(food):
     )
 
 
+
     search_terms = food_info.get(
         "search_terms",
-        [
-            food,
-            f"{food} recipe",
-            f"how to make {food}"
-        ]
-    )
-
-
-    print(
-        "STANDARD NAME:",
-        standard_name
+        [food]
     )
 
 
 
     # -----------------------------
-    # TheMealDB
+    # MealDB
     # -----------------------------
 
     try:
 
-        mealdb_results = recipe_agent(
+        mealdb = recipe_agent(
             standard_name
         )
 
 
-        if mealdb_results:
+        if mealdb:
 
             recipes.extend(
-                mealdb_results
+                mealdb
             )
 
 
     except Exception as e:
 
         print(
-            "MEALDB ERROR:",
+            "MealDB error:",
             e
         )
 
 
 
     # -----------------------------
-    # Tavily Web Search
+    # Tavily
     # -----------------------------
 
     for term in search_terms:
 
 
-        if len(recipes) >= 10:
-
-            break
-
-
         try:
 
-            web_results = web_recipe_agent(
+            web = web_recipe_agent(
                 term
             )
 
 
-            if web_results:
+            if web:
 
                 recipes.extend(
-                    web_results
+                    web
                 )
 
 
         except Exception as e:
 
             print(
-                "WEB SEARCH ERROR:",
+                "Web error:",
                 e
             )
 
 
 
     # -----------------------------
-    # Remove bad sources
+    # Normalize recipes
     # -----------------------------
 
-    blocked_sites = [
+    cleaned = []
 
-        "pinterest",
+
+    for item in recipes:
+
+
+        recipe = normalize_recipe(
+            item
+        )
+
+
+        if recipe:
+
+            cleaned.append(
+                recipe
+            )
+
+
+
+    # -----------------------------
+    # Remove bad websites
+    # -----------------------------
+
+    blocked = [
+
         "youtube",
+        "pinterest",
         "facebook",
         "instagram"
 
     ]
 
 
-    filtered = []
+
+    final = []
+
+    seen = set()
 
 
-    for recipe in recipes:
+
+    for recipe in cleaned:
 
 
         url = recipe.get(
@@ -136,35 +195,8 @@ def recipe_search_agent(food):
 
 
         if any(
-            site in url
-            for site in blocked_sites
-        ):
-
-            continue
-
-
-
-        filtered.append(
-            recipe
-        )
-
-
-
-    # -----------------------------
-    # Remove duplicates
-    # -----------------------------
-
-    final_recipes = []
-
-    seen = set()
-
-
-    for recipe in filtered:
-
-
-        if not isinstance(
-            recipe,
-            dict
+            b in url
+            for b in blocked
         ):
 
             continue
@@ -173,7 +205,7 @@ def recipe_search_agent(food):
 
         name = recipe.get(
             "Recipe",
-            "Unknown Recipe"
+            "Unknown"
         )
 
 
@@ -187,7 +219,7 @@ def recipe_search_agent(food):
                 key
             )
 
-            final_recipes.append(
+            final.append(
                 recipe
             )
 
@@ -195,18 +227,23 @@ def recipe_search_agent(food):
 
     print(
         "TOTAL RECIPES:",
-        len(final_recipes)
+        len(final)
     )
+
 
 
     return {
 
+
         "query": food,
+
 
         "food_info": food_info,
 
-        "count": len(final_recipes),
 
-        "recipes": final_recipes[:5]
+        "recipes": final[:5],
+
+
+        "count": len(final)
 
     }
