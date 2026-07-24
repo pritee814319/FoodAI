@@ -8,27 +8,39 @@ def clean_ingredient(text):
     text = text.lower()
 
 
-    # remove symbols
+
+    # Remove bullet symbols
 
     text = re.sub(
-        r"[^a-zA-Z ]",
-        " ",
+        r"[▢•\-]",
+        "",
         text
     )
 
 
-    words = text.split()
+
+    # Remove quantities
+
+    text = re.sub(
+        r"\d+[\d½¼¾\s/]*",
+        "",
+        text
+    )
 
 
-    ignore = [
 
-        "cup",
+    # Remove measurements
+
+    units = [
+
         "cups",
+        "cup",
         "tbsp",
         "tsp",
         "tablespoon",
+        "tablespoons",
         "teaspoon",
-        "half",
+        "teaspoons",
         "medium",
         "large",
         "small"
@@ -36,18 +48,70 @@ def clean_ingredient(text):
     ]
 
 
-    cleaned = []
+    for unit in units:
+
+        text = text.replace(
+            unit,
+            ""
+        )
 
 
-    for word in words:
 
-        if word not in ignore:
+    # Remove brackets
 
-            cleaned.append(
-                word
-            )
-
-
-    return " ".join(
-        cleaned
+    text = re.sub(
+        r"\(.*?\)",
+        "",
+        text
     )
+
+
+
+    # Keep only letters
+
+    text = re.sub(
+        r"[^a-z\s]",
+        "",
+        text
+    )
+
+
+
+    text = text.strip()
+
+
+
+    # ignore sentences
+
+    bad_words = [
+
+        "recipe",
+        "make",
+        "cook",
+        "add",
+        "heat",
+        "mix",
+        "serve",
+        "instructions",
+        "version",
+        "using"
+
+    ]
+
+
+    if len(text.split()) > 4:
+
+        return ""
+
+
+
+    if any(
+        word in text
+        for word in bad_words
+    ):
+
+        return ""
+
+
+
+    return text
