@@ -121,20 +121,20 @@ if st.button("Analyze Food"):
                         )
 
 
-                        st.write(
-                            "Cuisine:",
-                            recipe.get(
-                                "Cuisine"
-                            )
-                        )
+                        if recipe.get("Cuisine"):
+
+    st.write(
+        "Cuisine:",
+        recipe.get("Cuisine")
+    )
 
 
-                        st.write(
-                            "Category:",
-                            recipe.get(
-                                "Category"
-                            )
-                        )
+if recipe.get("Category"):
+
+    st.write(
+        "Category:",
+        recipe.get("Category")
+    )
 
 
                         st.write(
@@ -158,11 +158,17 @@ if st.button("Analyze Food"):
                         )
 
 
-                        st.write(
-                            recipe.get(
-                                "Instructions"
-                            )
-                        )
+                       if recipe.get("Instructions"):
+
+    st.write(
+        recipe.get("Instructions")
+    )
+
+else:
+
+    st.write(
+        "Recipe details will be extracted..."
+    )
 
 
             except Exception as e:
