@@ -12,41 +12,23 @@ def divide_nutrition(total, people):
     for key, value in total.items():
 
         try:
-
             result[key] = round(
                 value / people,
                 2
             )
 
         except:
-
             result[key] = value
 
-
     return result
-
 
 
 
 def manager_agent(food, people):
 
 
-    print(
-        "START MANAGER:",
-        food
-    )
+    print("START MANAGER:", food)
 
-
-    print(
-        "PEOPLE:",
-        people
-    )
-
-
-
-    # -----------------------------
-    # Search recipes
-    # -----------------------------
 
     search_result = recipe_search_agent(
         food
@@ -59,34 +41,26 @@ def manager_agent(food, people):
     )
 
 
-
-    if not recipes:
-
-
-        return {
-
-            "error":
-            "No recipes found"
-
-        }
+    valid_recipes = []
 
 
-
-    parsed_recipes = []
-
-
-
-    # -----------------------------
-    # Parse recipes
-    # -----------------------------
 
     for recipe in recipes:
 
 
-        if not isinstance(
-            recipe,
-            dict
-        ):
+        if not isinstance(recipe, dict):
+
+            continue
+
+
+        # remove error recipes
+
+        if recipe.get("error"):
+
+            continue
+
+
+        if recipe.get("Recipe") == "error":
 
             continue
 
@@ -100,110 +74,100 @@ def manager_agent(food, people):
             )
 
 
+            # keep original if parser fails
 
-            if parsed.get(
-                "Recipe"
-            ):
+            if not parsed.get("Recipe"):
 
-
-                parsed_recipes.append(
-                    parsed
+                parsed["Recipe"] = recipe.get(
+                    "Recipe",
+                    "Unknown Recipe"
                 )
 
+
+            valid_recipes.append(
+                parsed
+            )
 
 
         except Exception as e:
 
 
             print(
-                "PARSER ERROR:",
+                "Parser failed:",
                 e
+            )
+
+            valid_recipes.append(
+                recipe
             )
 
 
 
-    if not parsed_recipes:
+    if not valid_recipes:
 
 
         return {
 
             "error":
-            "Recipe details could not be extracted"
+            "No valid recipes found"
 
         }
 
 
 
-    # -----------------------------
-    # First recipe for nutrition
-    # -----------------------------
-
-    first_recipe = parsed_recipes[0]
+    first_recipe = valid_recipes[0]
 
 
 
-    raw_ingredients = first_recipe.get(
+    ingredients = first_recipe.get(
         "Ingredients",
         []
     )
 
 
-
     print(
-        "RAW INGREDIENTS:",
-        raw_ingredients
+        "INGREDIENTS BEFORE CLEAN:",
+        ingredients
     )
 
 
 
-    # Clean ingredients for USDA
-
-    ingredients = []
+    cleaned = []
 
 
-    for item in raw_ingredients:
+    for item in ingredients:
 
 
-        cleaned = clean_ingredient(
-            item
-        )
+        if isinstance(item, str):
 
-
-        if cleaned:
-
-            ingredients.append(
-                cleaned
+            value = clean_ingredient(
+                item
             )
+
+
+            if value:
+
+                cleaned.append(
+                    value
+                )
 
 
 
     print(
         "CLEAN INGREDIENTS:",
-        ingredients
+        cleaned
     )
 
 
-
-    # -----------------------------
-    # Nutrition
-    # -----------------------------
 
     nutrition = ingredient_agent(
-        ingredients
+        cleaned
     )
 
 
-
-    total_nutrition = nutrition.get(
+    total = nutrition.get(
         "Total Nutrition",
         {}
-    )
-
-
-
-    per_person = divide_nutrition(
-        total_nutrition,
-        people
     )
 
 
@@ -220,18 +184,21 @@ def manager_agent(food, people):
 
 
         "recipes":
-        parsed_recipes,
+        valid_recipes,
 
 
-        "nutrition": {
-
+        "nutrition":
+        {
 
             "Total Recipe Nutrition":
-            total_nutrition,
+            total,
 
 
             "Nutrition Per Person":
-            per_person
+            divide_nutrition(
+                total,
+                people
+            )
 
         }
 
