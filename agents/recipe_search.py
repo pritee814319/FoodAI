@@ -3,135 +3,177 @@ from agents.web_recipe_agent import web_recipe_agent
 from agents.food_understanding_agent import food_understanding_agent
 
 
+
 def recipe_search_agent(food):
 
     print("=" * 50)
-    print("RECIPE SEARCH")
+    print("RECIPE SEARCH:", food)
     print("=" * 50)
+
 
     recipes = []
 
-    # -----------------------------
-    # Step 1: Understand the food
-    # -----------------------------
+
+    # --------------------------------
+    # 1. Understand the food
+    # --------------------------------
+
     food_info = food_understanding_agent(food)
 
-   standard_name = food_info.get(
-    "standard_name",
-    food
-)
+
+    standard_name = food_info.get(
+        "standard_name",
+        food
+    )
 
 
-search_terms = food_info.get(
-    "search_terms",
-    [
-        food,
-        f"{food} recipe",
-        f"how to make {food}"
-    ]
-)
+    search_terms = food_info.get(
+        "search_terms",
+        [
+            food,
+            f"{food} recipe",
+            f"how to make {food}"
+        ]
+    )
 
 
-print(
-    "STANDARD NAME:",
-    standard_name
-)
+    print(
+        "STANDARD NAME:",
+        standard_name
+    )
 
-print(
-    "SEARCH TERMS:",
-    search_terms
-)
 
-    # -----------------------------
-    # Step 2: Search TheMealDB
-    # -----------------------------
+    print(
+        "SEARCH TERMS:",
+        search_terms
+    )
+
+
+    # --------------------------------
+    # 2. Search TheMealDB
+    # --------------------------------
+
     try:
 
         mealdb_results = recipe_agent(
-    standard_name
-)
+            standard_name
+        )
+
 
         if mealdb_results:
 
             print(
-                "TheMealDB:",
-                len(mealdb_results),
-                "recipes"
+                "MEALDB FOUND:",
+                len(mealdb_results)
             )
 
-            recipes.extend(mealdb_results)
+            recipes.extend(
+                mealdb_results
+            )
+
 
     except Exception as e:
 
         print(
-            "MealDB Error:",
+            "MEALDB ERROR:",
             e
         )
 
-    # -----------------------------
-    # Step 3: Search Internet
-    # -----------------------------
-  for search_term in search_terms:
 
-        if len(recipes) >= 5:
+
+    # --------------------------------
+    # 3. Search Web using Tavily
+    # --------------------------------
+
+    for term in search_terms:
+
+
+        if len(recipes) >= 10:
+
             break
+
 
         try:
 
             print(
-                "Searching:",
-                search_term
+                "WEB SEARCH:",
+                term
             )
 
+
             web_results = web_recipe_agent(
-                search_term
+                term
             )
+
 
             if web_results:
 
+
                 print(
-                    "Found:",
+                    "WEB FOUND:",
                     len(web_results)
                 )
 
-                recipes.extend(web_results)
+
+                recipes.extend(
+                    web_results
+                )
+
 
         except Exception as e:
 
+
             print(
-                "Web Search Error:",
+                "WEB SEARCH ERROR:",
                 e
             )
 
-    # -----------------------------
-    # Step 4: Remove duplicates
-    # -----------------------------
-    unique = []
+
+
+    # --------------------------------
+    # 4. Remove duplicates
+    # --------------------------------
+
+    final_recipes = []
+
     seen = set()
+
 
     for recipe in recipes:
 
+
         if not isinstance(recipe, dict):
+
             continue
+
+
 
         name = recipe.get(
             "Recipe",
-            ""
-        ).strip().lower()
+            "Unknown Recipe"
+        )
 
-        if not name:
-            continue
 
-        if name in seen:
-            continue
+        key = name.lower().strip()
 
-        seen.add(name)
-        unique.append(recipe)
+
+
+        if key not in seen:
+
+
+            seen.add(key)
+
+            final_recipes.append(
+                recipe
+            )
+
+
 
     print(
-        "FINAL RECIPES:",
-        len(unique)
+        "TOTAL RECIPES:",
+        len(final_recipes)
     )
+
 
     return {
 
@@ -139,8 +181,8 @@ print(
 
         "food_info": food_info,
 
-        "count": len(unique),
+        "count": len(final_recipes),
 
-        "recipes": unique[:5]
+        "recipes": final_recipes[:5]
 
     }
