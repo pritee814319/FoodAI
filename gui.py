@@ -5,19 +5,24 @@ from agents.manager_agent import manager_agent
 
 st.set_page_config(
     page_title="FoodAI",
-    page_icon="🍲"
+    page_icon="🍲",
+    layout="wide"
 )
 
 
 st.title("🍲 FoodAI")
-st.write("AI Food Nutrition & Recipe Analyzer")
+st.subheader("AI Food Nutrition & Recipe Analyzer")
 
+
+# -------------------------
+# Input Form
+# -------------------------
 
 with st.form("food_form"):
 
     food = st.text_input(
         "Enter food name",
-        placeholder="Example: Chicken Handi"
+        placeholder="Example: Poha, Pizza, Ramen"
     )
 
 
@@ -30,22 +35,35 @@ with st.form("food_form"):
 
 
     submitted = st.form_submit_button(
-        "Analyze Food"
+        "🔍 Analyze Food"
     )
 
 
 
+# -------------------------
+# Analysis
+# -------------------------
+
 if submitted:
 
 
-    if food.strip():
+    if not food.strip():
+
+        st.warning(
+            "Please enter food name"
+        )
+
+
+    else:
+
 
         with st.spinner(
-            "FoodAI agents are working..."
+            "FoodAI is analyzing your food..."
         ):
 
 
             try:
+
 
                 result = manager_agent(
                     food,
@@ -55,6 +73,7 @@ if submitted:
 
                 if "error" in result:
 
+
                     st.error(
                         result["error"]
                     )
@@ -62,13 +81,21 @@ if submitted:
 
                 else:
 
+
                     st.success(
                         "Analysis Complete!"
                     )
 
 
-                    st.subheader(
-                        "🥗 Nutrition Information"
+                    # =========================
+                    # Nutrition Dashboard
+                    # =========================
+
+
+                    st.divider()
+
+                    st.header(
+                        "🥗 Nutrition Summary"
                     )
 
 
@@ -78,32 +105,114 @@ if submitted:
                     )
 
 
-                    st.write(
-                        "Total Recipe Nutrition"
-                    )
-
-                    st.json(
-                        nutrition.get(
-                            "Total Recipe Nutrition",
-                            {}
-                        )
+                    total = nutrition.get(
+                        "Total Recipe Nutrition",
+                        {}
                     )
 
 
-                    st.write(
-                        f"Nutrition Per Person ({people} people)"
+                    per_person = nutrition.get(
+                        "Nutrition Per Person",
+                        {}
                     )
 
-                    st.json(
-                        nutrition.get(
-                            "Nutrition Per Person",
-                            {}
-                        )
+
+                    st.subheader(
+                        "🍲 Total Recipe Nutrition"
+                    )
+
+
+                    c1,c2,c3,c4 = st.columns(4)
+
+
+                    c1.metric(
+                        "🔥 Calories",
+                        f"{total.get('Calories (kcal)',0)} kcal"
+                    )
+
+
+                    c2.metric(
+                        "💪 Protein",
+                        f"{total.get('Protein (g)',0)} g"
+                    )
+
+
+                    c3.metric(
+                        "🍚 Carbs",
+                        f"{total.get('Carbohydrates (g)',0)} g"
+                    )
+
+
+                    c4.metric(
+                        "🥑 Fat",
+                        f"{total.get('Fat (g)',0)} g"
+                    )
+
+
+
+                    c5,c6,c7 = st.columns(3)
+
+
+                    c5.metric(
+                        "🌾 Fiber",
+                        f"{total.get('Fiber (g)',0)} g"
+                    )
+
+
+                    c6.metric(
+                        "🍬 Sugar",
+                        f"{total.get('Sugar (g)',0)} g"
+                    )
+
+
+                    c7.metric(
+                        "🧂 Sodium",
+                        f"{total.get('Sodium (mg)',0)} mg"
                     )
 
 
 
                     st.subheader(
+                        f"👤 Per Person ({people} servings)"
+                    )
+
+
+                    p1,p2,p3,p4 = st.columns(4)
+
+
+                    p1.metric(
+                        "🔥 Calories",
+                        f"{per_person.get('Calories (kcal)',0)} kcal"
+                    )
+
+
+                    p2.metric(
+                        "💪 Protein",
+                        f"{per_person.get('Protein (g)',0)} g"
+                    )
+
+
+                    p3.metric(
+                        "🍚 Carbs",
+                        f"{per_person.get('Carbohydrates (g)',0)} g"
+                    )
+
+
+                    p4.metric(
+                        "🥑 Fat",
+                        f"{per_person.get('Fat (g)',0)} g"
+                    )
+
+
+
+                    # =========================
+                    # Recipes
+                    # =========================
+
+
+                    st.divider()
+
+                    st.header(
                         "🍛 Recipes"
                     )
 
@@ -117,82 +226,131 @@ if submitted:
                     for recipe in recipes:
 
 
-                        st.markdown(
-                            f"## {recipe.get('Recipe','Recipe')}"
+                        if not isinstance(
+                            recipe,
+                            dict
+                        ):
+                            continue
+
+
+
+                        recipe_name = recipe.get(
+                            "Recipe",
+                            "Recipe"
                         )
 
 
-                        if recipe.get("URL"):
+                        with st.expander(
+                            f"🍽️ {recipe_name}",
+                            expanded=True
+                        ):
 
-                            st.write(
-                                "🔗 Recipe Source:"
+
+                            url = recipe.get(
+                                "URL"
                             )
 
-                            st.write(
-                                recipe["URL"]
-                            )
 
+                            if url:
 
-                        ingredients = recipe.get(
-                            "Ingredients"
-                        )
-
-
-                        if ingredients:
-
-
-                            st.write(
-                                "🥘 Ingredients"
-                            )
-
-                            for item in ingredients:
 
                                 st.write(
-                                    "-",
-                                    item
+                                    "🔗 Source:"
                                 )
 
-                        else:
+                                st.write(
+                                    url
+                                )
 
-                            st.info(
-                                "Ingredients not available."
+
+
+                            # Ingredients
+
+                            ingredients = recipe.get(
+                                "Ingredients"
                             )
 
 
-                        instructions = recipe.get(
-                            "Instructions"
-                        )
+                            if ingredients:
 
 
-                        if instructions:
+                                st.subheader(
+                                    "🥘 Ingredients"
+                                )
 
 
-                            st.write(
-                                "👩‍🍳 Instructions"
-                            )
+                                if isinstance(
+                                    ingredients,
+                                    list
+                                ):
 
-                            if isinstance(
-                                instructions,
-                                list
-                            ):
 
-                                for step in instructions:
+                                    for item in ingredients:
+
+                                        st.write(
+                                            "•",
+                                            item
+                                        )
+
+                                else:
 
                                     st.write(
-                                        step
+                                        ingredients
                                     )
+
 
                             else:
 
-                                st.write(
-                                    instructions
+
+                                st.info(
+                                    "Ingredients not available."
                                 )
 
-                        else:
 
-                            st.write(
-                                "Recipe instructions are available on the original source."
+
+                            # Instructions
+
+                            instructions = recipe.get(
+                                "Instructions"
                             )
+
+
+                            if instructions:
+
+
+                                st.subheader(
+                                    "👩‍🍳 Instructions"
+                                )
+
+
+                                if isinstance(
+                                    instructions,
+                                    list
+                                ):
+
+
+                                    for i,step in enumerate(
+                                        instructions,
+                                        start=1
+                                    ):
+
+                                        st.write(
+                                            f"{i}. {step}"
+                                        )
+
+                                else:
+
+                                    st.write(
+                                        instructions
+                                    )
+
+
+                            else:
+
+
+                                st.caption(
+                                    "Full cooking instructions available at source."
+                                )
 
 
 
@@ -202,10 +360,3 @@ if submitted:
                 st.error(
                     f"FoodAI Error: {e}"
                 )
-
-
-    else:
-
-        st.warning(
-            "Please enter food name"
-        )
