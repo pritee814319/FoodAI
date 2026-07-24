@@ -15,7 +15,7 @@ st.write("AI Food Nutrition & Recipe Analyzer")
 
 food = st.text_input(
     "Enter food name",
-    placeholder="Example: Chicken Handi"
+    placeholder="Example: Poha, Pizza, Chicken Handi"
 )
 
 
@@ -30,16 +30,20 @@ people = st.number_input(
 
 if st.button("Analyze Food"):
 
+    if not food.strip():
 
-    if food.strip():
+        st.warning(
+            "Please enter food name"
+        )
+
+
+    else:
 
         with st.spinner(
             "FoodAI agents are working..."
         ):
 
-
             try:
-
 
                 result = manager_agent(
                     food,
@@ -56,13 +60,14 @@ if st.button("Analyze Food"):
 
                 else:
 
-
                     st.success(
                         "Analysis Complete!"
                     )
 
 
+                    # --------------------------
                     # Nutrition
+                    # --------------------------
 
                     st.subheader(
                         "🥗 Nutrition Information"
@@ -75,16 +80,34 @@ if st.button("Analyze Food"):
                     )
 
 
+                    total = nutrition.get(
+                        "Total Recipe Nutrition",
+                        {}
+                    )
+
+
+                    per_person = nutrition.get(
+                        "Nutrition Per Person",
+                        {}
+                    )
+
+
                     st.write(
                         "Total Recipe Nutrition"
                     )
 
-                    st.json(
-                        nutrition.get(
-                            "Total Recipe Nutrition",
-                            {}
+                    if total:
+
+                        st.json(
+                            total
                         )
-                    )
+
+                    else:
+
+                        st.info(
+                            "Nutrition information not available yet"
+                        )
+
 
 
                     st.write(
@@ -92,18 +115,26 @@ if st.button("Analyze Food"):
                     )
 
 
-                    st.json(
-                        nutrition.get(
-                            "Nutrition Per Person",
-                            {}
+                    if per_person:
+
+                        st.json(
+                            per_person
                         )
-                    )
+
+                    else:
+
+                        st.info(
+                            "Nutrition per person not available yet"
+                        )
 
 
+
+                    # --------------------------
                     # Recipes
+                    # --------------------------
 
                     st.subheader(
-                        "🍛 Recipe"
+                        "🍛 Recipes"
                     )
 
 
@@ -113,85 +144,119 @@ if st.button("Analyze Food"):
                     )
 
 
+                    if not recipes:
+
+                        st.warning(
+                            "No recipes found"
+                        )
+
+
                     for recipe in recipes:
 
 
                         st.markdown(
-                            f"## {recipe.get('Recipe')}"
+                            "---"
                         )
+
+
+                        st.markdown(
+                            f"## {recipe.get('Recipe','Recipe')}"
+                        )
+
 
 
                         if recipe.get("Cuisine"):
 
-    st.write(
-        "Cuisine:",
-        recipe.get("Cuisine")
-    )
-
-
-if recipe.get("Category"):
-
-    st.write(
-        "Category:",
-        recipe.get("Category")
-    )
-if recipe.get("Instructions"):
-
-    st.write(
-        recipe.get("Instructions")
-    )
-
-else:
-
-    st.write(
-        "Recipe details will be extracted..."
-    )
-
-                        st.write(
-                            "### Ingredients"
-                        )
-
-
-                        for item in recipe.get(
-                            "Ingredients",
-                            []
-                        ):
-
                             st.write(
-                                "-",
-                                item
+                                "Cuisine:",
+                                recipe.get("Cuisine")
                             )
 
 
-                        st.write(
-                            "### Instructions"
+
+                        if recipe.get("Category"):
+
+                            st.write(
+                                "Category:",
+                                recipe.get("Category")
+                            )
+
+
+
+                        if recipe.get("URL"):
+
+                            st.write(
+                                "🔗 Recipe URL:"
+                            )
+
+                            st.write(
+                                recipe.get("URL")
+                            )
+
+
+
+                        # Ingredients
+
+                        ingredients = recipe.get(
+                            "Ingredients",
+                            []
                         )
 
 
-                       if recipe.get("Instructions"):
+                        if ingredients:
 
-    st.write(
-        recipe.get("Instructions")
-    )
+                            st.write(
+                                "### 🥘 Ingredients"
+                            )
 
-else:
 
-    st.write(
-        "Recipe details will be extracted..."
-    )
+                            for item in ingredients:
+
+                                st.write(
+                                    "-",
+                                    item
+                                )
+
+
+                        else:
+
+                            st.info(
+                                "Ingredients will be extracted by Recipe Parser Agent"
+                            )
+
+
+
+                        # Instructions
+
+                        instructions = recipe.get(
+                            "Instructions",
+                            ""
+                        )
+
+
+                        if instructions:
+
+
+                            st.write(
+                                "### 👩‍🍳 Instructions"
+                            )
+
+
+                            st.write(
+                                instructions
+                            )
+
+
+                        else:
+
+                            st.info(
+                                "Instructions will be extracted by Recipe Parser Agent"
+                            )
+
 
 
             except Exception as e:
 
-
                 st.error(
                     f"FoodAI Error: {e}"
                 )
-
-
-    else:
-
-
-        st.warning(
-            "Please enter food name"
-        )
