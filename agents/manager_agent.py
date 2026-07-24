@@ -8,6 +8,7 @@ def divide_nutrition(total, people):
 
     result = {}
 
+
     for key, value in total.items():
 
         try:
@@ -21,11 +22,14 @@ def divide_nutrition(total, people):
 
             result[key] = value
 
+
     return result
 
 
 
+
 def manager_agent(food, people):
+
 
     print(
         "START MANAGER:",
@@ -39,7 +43,10 @@ def manager_agent(food, people):
     )
 
 
+
+    # -----------------------------
     # Search recipes
+    # -----------------------------
 
     search_result = recipe_search_agent(
         food
@@ -54,43 +61,61 @@ def manager_agent(food, people):
 
     if not recipes:
 
+
         return {
-            "error": "No recipes found"
+
+            "error":
+            "No recipes found"
+
         }
 
 
 
-    # Take first recipe
-
-    recipe = recipes[0]
-
-
-    print(
-        "FIRST RECIPE:",
-        recipe.get("Recipe")
-    )
+    parsed_recipes = []
 
 
 
-    # Parse webpage recipe
+    # -----------------------------
+    # Parse recipes
+    # -----------------------------
 
-    try:
-
-        recipe = recipe_parser_agent(
-            recipe
-        )
+    for recipe in recipes:
 
 
-    except Exception as e:
+        try:
 
-        print(
-            "PARSER ERROR:",
-            e
-        )
-
+            parsed = recipe_parser_agent(
+                recipe
+            )
 
 
-    ingredients = recipe.get(
+            parsed_recipes.append(
+                parsed
+            )
+
+
+        except Exception as e:
+
+
+            print(
+                "PARSER ERROR:",
+                e
+            )
+
+
+            parsed_recipes.append(
+                recipe
+            )
+
+
+
+    # use first recipe for nutrition
+
+    first_recipe = parsed_recipes[0]
+
+
+
+    ingredients = first_recipe.get(
         "Ingredients",
         []
     )
@@ -103,7 +128,9 @@ def manager_agent(food, people):
 
 
 
+    # -----------------------------
     # Nutrition
+    # -----------------------------
 
     nutrition = ingredient_agent(
         ingredients
@@ -127,13 +154,21 @@ def manager_agent(food, people):
 
     return {
 
-        "query": food,
 
-        "servings": people,
+        "query":
+        food,
 
-        "recipes": recipes,
+
+        "servings":
+        people,
+
+
+        "recipes":
+        parsed_recipes,
+
 
         "nutrition": {
+
 
             "Total Recipe Nutrition":
             total_nutrition,
