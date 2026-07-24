@@ -135,21 +135,29 @@ def manager_agent(food, people):
     cleaned = []
 
 
-    for item in ingredients:
+for item in ingredients:
 
 
-        if isinstance(item, str):
+    if isinstance(item, str):
 
-            value = clean_ingredient(
-                item
+
+        value = clean_ingredient(
+            item
+        )
+
+
+        if value:
+
+            cleaned.append(
+                value
             )
 
 
-            if value:
 
-                cleaned.append(
-                    value
-                )
+print(
+    "FINAL USDA INGREDIENTS:",
+    cleaned
+)
 
 
 
