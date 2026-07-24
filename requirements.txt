@@ -4,6 +4,5 @@ beautifulsoup4
 lxml
 python-dotenv
 tavily-python
-matplotlib==3.9.4
 pandas
 Pillow
