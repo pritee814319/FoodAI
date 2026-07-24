@@ -1,6 +1,10 @@
 
 import streamlit as st
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+    print("MATPLOTLIB OK")
+except Exception as e:
+    print("MATPLOTLIB ERROR:", e)
 
 from agents.manager_agent import manager_agent
 from agents.food_image_agent import food_image_agent
