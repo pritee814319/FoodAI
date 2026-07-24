@@ -108,10 +108,57 @@ def recipe_parser_agent(recipe):
                         )
 
 
-                        steps = item.get(
-                            "recipeInstructions",
-                            []
-                        )
+                      steps = item.get(
+    "recipeInstructions",
+    []
+)
+
+
+if isinstance(steps, list):
+
+
+    for step in steps:
+
+
+        if isinstance(
+            step,
+            dict
+        ):
+
+
+            text = step.get(
+                "text",
+                ""
+            )
+
+
+            if text:
+
+                instructions.append(
+                    text
+                )
+
+
+        elif isinstance(
+            step,
+            str
+        ):
+
+
+            instructions.append(
+                step
+            )
+
+
+elif isinstance(
+    steps,
+    str
+):
+
+
+    instructions.append(
+        steps
+    )
 
 
                         if isinstance(
