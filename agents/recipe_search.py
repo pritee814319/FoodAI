@@ -1,120 +1,123 @@
 from agents.recipe_agent import recipe_agent
 from agents.web_recipe_agent import web_recipe_agent
-
+from agents.food_understanding_agent import food_understanding_agent
 
 
 def recipe_search_agent(food):
 
-
-    print(
-        "RECIPE SEARCH:",
-        food
-    )
-
+    print("=" * 50)
+    print("RECIPE SEARCH")
+    print("=" * 50)
 
     recipes = []
 
+    # -----------------------------
+    # Step 1: Understand the food
+    # -----------------------------
+    food_info = food_understanding_agent(food)
 
-    # -----------------------
-    # Source 1: TheMealDB
-    # -----------------------
+    print("STANDARD NAME:", food_info["standard_name"])
+    print("SEARCH TERMS:", food_info["search_terms"])
 
+    # -----------------------------
+    # Step 2: Search TheMealDB
+    # -----------------------------
     try:
 
         mealdb_results = recipe_agent(
-            food
+            food_info["standard_name"]
         )
-
 
         if mealdb_results:
 
-            recipes.extend(
-                mealdb_results
+            print(
+                "TheMealDB:",
+                len(mealdb_results),
+                "recipes"
             )
 
+            recipes.extend(mealdb_results)
 
     except Exception as e:
 
         print(
-            "MealDB error:",
+            "MealDB Error:",
             e
         )
 
+    # -----------------------------
+    # Step 3: Search Internet
+    # -----------------------------
+    for search_term in food_info["search_terms"]:
 
-
-    # -----------------------
-    # Source 2: Internet Search
-    # -----------------------
-
-    if len(recipes) < 5:
-
+        if len(recipes) >= 5:
+            break
 
         try:
 
-            web_results = web_recipe_agent(
-                food
+            print(
+                "Searching:",
+                search_term
             )
 
+            web_results = web_recipe_agent(
+                search_term
+            )
 
             if web_results:
 
-                recipes.extend(
-                    web_results
+                print(
+                    "Found:",
+                    len(web_results)
                 )
 
+                recipes.extend(web_results)
 
         except Exception as e:
 
             print(
-                "Web search error:",
+                "Web Search Error:",
                 e
             )
 
-
-
-    # -----------------------
-    # Remove duplicates
-    # -----------------------
-
-    final_recipes = []
-
-    names = set()
-
+    # -----------------------------
+    # Step 4: Remove duplicates
+    # -----------------------------
+    unique = []
+    seen = set()
 
     for recipe in recipes:
 
+        if not isinstance(recipe, dict):
+            continue
 
-        if isinstance(recipe, dict):
+        name = recipe.get(
+            "Recipe",
+            ""
+        ).strip().lower()
 
+        if not name:
+            continue
 
-            name = recipe.get(
-                "Recipe",
-                "Unknown"
-            )
+        if name in seen:
+            continue
 
-
-            if name not in names:
-
-                names.add(name)
-
-                final_recipes.append(
-                    recipe
-                )
-
-
+        seen.add(name)
+        unique.append(recipe)
 
     print(
-        "TOTAL RECIPES:",
-        len(final_recipes)
+        "FINAL RECIPES:",
+        len(unique)
     )
-
 
     return {
 
         "query": food,
 
-        "count": len(final_recipes),
+        "food_info": food_info,
 
-        "recipes": final_recipes[:5]
+        "count": len(unique),
+
+        "recipes": unique[:5]
 
     }
