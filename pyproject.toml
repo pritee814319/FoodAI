@@ -12,3 +12,5 @@ dependencies = [
     "pandas",
     "pillow"
 ]
+
+# FoodAI Python version lock
