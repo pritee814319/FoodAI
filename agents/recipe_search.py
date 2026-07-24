@@ -16,8 +16,31 @@ def recipe_search_agent(food):
     # -----------------------------
     food_info = food_understanding_agent(food)
 
-    print("STANDARD NAME:", food_info["standard_name"])
-    print("SEARCH TERMS:", food_info["search_terms"])
+   standard_name = food_info.get(
+    "standard_name",
+    food
+)
+
+
+search_terms = food_info.get(
+    "search_terms",
+    [
+        food,
+        f"{food} recipe",
+        f"how to make {food}"
+    ]
+)
+
+
+print(
+    "STANDARD NAME:",
+    standard_name
+)
+
+print(
+    "SEARCH TERMS:",
+    search_terms
+)
 
     # -----------------------------
     # Step 2: Search TheMealDB
