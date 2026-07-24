@@ -1,63 +1,24 @@
-from agents.recipe_search import recipe_search_agent
+from agents.recipe_parser_agent import recipe_parser_agent
 
 
-foods = [
+recipe = {
 
-    "Chicken Handi",
+    "Recipe":
+    "Misal Pav",
 
-    "Misal",
+    "URL":
+    "PASTE_WORKING_URL_HERE"
 
-    "Pizza",
-
-    "Sushi",
-
-    "Ramen"
-
-]
+}
 
 
-for food in foods:
-
-    print("\n====================")
-
-    print(
-        "SEARCH:",
-        food
-    )
+result = recipe_parser_agent(recipe)
 
 
-    result = recipe_search_agent(food)
+print("\nINGREDIENTS")
+for i in result.get("Ingredients", []):
+    print("-", i)
 
 
-    print(
-        "RECIPES FOUND:",
-        result.get(
-            "count",
-            0
-        )
-    )
-
-
-    for recipe in result.get(
-        "recipes",
-        []
-    ):
-
-        print(
-            "-",
-            recipe.get(
-                "Recipe",
-                recipe.get(
-                    "title",
-                    "Unknown"
-                )
-            )
-        )
-
-
-        if recipe.get("URL"):
-
-            print(
-                "URL:",
-                recipe["URL"]
-            )
+print("\nINSTRUCTIONS")
+print(result.get("Instructions"))
