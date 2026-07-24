@@ -1,28 +1,56 @@
 from agents.recipe_search import recipe_search_agent
+from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_agent import ingredient_agent
+
 
 
 def divide_nutrition(total, people):
 
-    per_person = {}
+    result = {}
 
     for key, value in total.items():
 
         try:
-            per_person[key] = round(value / people, 2)
-        except Exception:
-            per_person[key] = value
 
-    return per_person
+            result[key] = round(
+                value / people,
+                2
+            )
+
+        except:
+
+            result[key] = value
+
+    return result
+
 
 
 def manager_agent(food, people):
 
-    print("START MANAGER:", food)
+    print(
+        "START MANAGER:",
+        food
+    )
 
-    search_result = recipe_search_agent(food)
 
-    recipes = search_result.get("recipes", [])
+    print(
+        "PEOPLE:",
+        people
+    )
+
+
+    # Search recipes
+
+    search_result = recipe_search_agent(
+        food
+    )
+
+
+    recipes = search_result.get(
+        "recipes",
+        []
+    )
+
 
     if not recipes:
 
@@ -30,39 +58,72 @@ def manager_agent(food, people):
             "error": "No recipes found"
         }
 
+
+
+    # Take first recipe
+
     recipe = recipes[0]
-from agents.recipe_parser_agent import recipe_parser_agent
-recipe = recipe_parser_agent(
-    recipe
-)
+
+
+    print(
+        "FIRST RECIPE:",
+        recipe.get("Recipe")
+    )
+
+
+
+    # Parse webpage recipe
+
+    try:
+
+        recipe = recipe_parser_agent(
+            recipe
+        )
+
+
+    except Exception as e:
+
+        print(
+            "PARSER ERROR:",
+            e
+        )
+
+
+
     ingredients = recipe.get(
         "Ingredients",
         []
     )
 
-    # Web recipes don't have ingredients yet
-    if not ingredients:
 
-        return {
+    print(
+        "INGREDIENT COUNT:",
+        len(ingredients)
+    )
 
-            "query": food,
 
-            "servings": people,
 
-            "recipes": recipes,
-
-            "nutrition": {}
-
-        }
+    # Nutrition
 
     nutrition = ingredient_agent(
         ingredients
     )
 
-    total = nutrition.get(
+
+
+    total_nutrition = nutrition.get(
         "Total Nutrition",
         {}
     )
+
+
+
+    per_person = divide_nutrition(
+        total_nutrition,
+        people
+    )
+
+
 
     return {
 
@@ -74,12 +135,12 @@ recipe = recipe_parser_agent(
 
         "nutrition": {
 
-            "Total Recipe Nutrition": total,
+            "Total Recipe Nutrition":
+            total_nutrition,
 
-            "Nutrition Per Person": divide_nutrition(
-                total,
-                people
-            )
+
+            "Nutrition Per Person":
+            per_person
 
         }
 
