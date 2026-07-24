@@ -1,172 +1,227 @@
-
 import requests
 from bs4 import BeautifulSoup
-import json
+import re
 
 
-def recipe_parser_agent(url):
 
-    headers = {
+def recipe_parser_agent(recipe):
 
-        "User-Agent":
-        "Mozilla/5.0"
-
-    }
-
-
-    response = requests.get(
-        url,
-        headers=headers,
-        timeout=15
+    print(
+        "PARSING RECIPE:",
+        recipe.get("Recipe")
     )
 
 
-    if response.status_code != 200:
+    url = recipe.get(
+        "URL",
+        ""
+    )
 
-        return {
 
-            "error": "Unable to open recipe page"
+    if not url:
+
+        return recipe
+
+
+
+    try:
+
+        headers = {
+
+            "User-Agent":
+            "Mozilla/5.0"
 
         }
 
 
-    soup = BeautifulSoup(
-        response.text,
-        "html.parser"
-    )
-
-
-    recipes = soup.find_all(
-        "script",
-        type="application/ld+json"
-    )
-
-
-    for script in recipes:
-
-
-        try:
-
-            data = json.loads(
-                script.string
-            )
-
-
-            # Some websites return a list
-
-            if isinstance(data, list):
-
-                items = data
-
-            else:
-
-                items = [data]
-
-
-
-            for item in items:
-
-
-                if item.get(
-                    "@type"
-                ) == "Recipe":
-
-
-                    return {
-
-                        "Recipe":
-                            item.get(
-                                "name"
-                            ),
-
-                        "Ingredients":
-                            item.get(
-                                "recipeIngredient",
-                                []
-                            ),
-
-                        "Instructions":
-                            extract_instructions(
-                                item.get(
-                                    "recipeInstructions",
-                                    []
-                                )
-                            ),
-
-                        "Servings":
-                            item.get(
-                                "recipeYield"
-                            ),
-
-                        "Source":
-                            url
-
-                    }
-
-
-        except Exception:
-
-            continue
-
-
-
-    return {
-
-        "error":
-        "Recipe information not found"
-
-    }
-
-
-
-
-
-def extract_instructions(data):
-
-
-    instructions = []
-
-
-    if isinstance(
-        data,
-        list
-    ):
-
-
-        for step in data:
-
-
-            if isinstance(
-                step,
-                dict
-            ):
-
-                text = step.get(
-                    "text"
-                )
-
-                if text:
-
-                    instructions.append(
-                        text
-                    )
-
-
-            else:
-
-                instructions.append(
-                    step
-                )
-
-
-    elif isinstance(
-        data,
-        str
-    ):
-
-        instructions.append(
-            data
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=10
         )
 
 
-    return instructions
+        if response.status_code != 200:
+
+            print(
+                "PAGE ERROR:",
+                response.status_code
+            )
+
+            return recipe
+
+
+
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
+
+
+
+        # --------------------------------
+        # Extract page text
+        # --------------------------------
+
+        text = soup.get_text(
+            " ",
+            strip=True
+        )
+
+
+
+        # --------------------------------
+        # Ingredients
+        # --------------------------------
+
+        ingredients = []
+
+
+        ingredient_keywords = [
+
+            "ingredients",
+            "ingredient"
+
+        ]
+
+
+        for tag in soup.find_all(
+            ["li","p"]
+        ):
+
+
+            content = tag.get_text(
+                " ",
+                strip=True
+            )
+
+
+            if len(content) > 3:
+
+                if any(
+                    word in content.lower()
+                    for word in [
+                        "cup",
+                        "tbsp",
+                        "tsp",
+                        "kg",
+                        "gram",
+                        "g ",
+                        "ml",
+                        "onion",
+                        "tomato",
+                        "salt"
+                    ]
+                ):
+
+                    ingredients.append(
+                        content
+                    )
+
+
+
+        # remove duplicates
+
+        ingredients = list(
+            dict.fromkeys(
+                ingredients
+            )
+        )
+
+
+
+        # --------------------------------
+        # Instructions
+        # --------------------------------
+
+        instructions = []
+
+
+        for tag in soup.find_all(
+            ["li","p"]
+        ):
+
+
+            content = tag.get_text(
+                " ",
+                strip=True
+            )
+
+
+            if len(content) > 30:
+
+                if any(
+                    word in content.lower()
+                    for word in [
+                        "cook",
+                        "add",
+                        "mix",
+                        "heat",
+                        "boil",
+                        "bake",
+                        "serve"
+                    ]
+                ):
+
+                    instructions.append(
+                        content
+                    )
+
+
+
+        # --------------------------------
+        # Servings
+        # --------------------------------
+
+        servings = ""
+
+
+        match = re.search(
+            r"(serves|servings|yield)\s*:?\s*(\d+)",
+            text,
+            re.I
+        )
+
+
+        if match:
+
+            servings = match.group(2)
+
+
+
+        recipe["Ingredients"] = ingredients[:20]
+
+        recipe["Instructions"] = "\n".join(
+            instructions[:10]
+        )
+
+        recipe["Servings"] = servings
+
+
+
+        print(
+            "INGREDIENTS FOUND:",
+            len(ingredients)
+        )
+
+
+        print(
+            "INSTRUCTIONS FOUND:",
+            len(instructions)
+        )
+
+
+        return recipe
+
+
+
+    except Exception as e:
+
+
+        print(
+            "PARSER ERROR:",
+            e
+        )
+
+
+        return recipe
