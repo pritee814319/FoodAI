@@ -1,28 +1,36 @@
 from agents.recipe_search import recipe_search_agent
 from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_agent import ingredient_agent
-from agents.ingredient_cleaner import clean_ingredient
 
 
 
 def divide_nutrition(total, people):
 
-    result = {}
+
+    per_person = {}
+
 
     for key, value in total.items():
 
+
         try:
 
-            result[key] = round(
+            per_person[key] = round(
                 value / people,
                 2
             )
 
-        except:
 
-            result[key] = value
+        except Exception:
 
-    return result
+
+            per_person[key] = value
+
+
+
+    return per_person
+
+
 
 
 
@@ -42,19 +50,37 @@ def manager_agent(food, people):
 
 
 
-    # -----------------------------
-    # Search recipes
-    # -----------------------------
+    # ==========================
+    # Recipe Search
+    # ==========================
+
 
     search_result = recipe_search_agent(
         food
     )
 
 
+
+    if not search_result:
+
+
+        return {
+
+            "error":
+            "No recipes found"
+
+        }
+
+
+
     recipes = search_result.get(
+
         "recipes",
+
         []
+
     )
+
 
 
     if not recipes:
@@ -69,42 +95,18 @@ def manager_agent(food, people):
 
 
 
+
+
     parsed_recipes = []
 
 
 
-    # -----------------------------
+    # ==========================
     # Parse recipes
-    # -----------------------------
-
-    for recipe in recipes:
+    # ==========================
 
 
-        if not isinstance(
-            recipe,
-            dict
-        ):
-
-            continue
-
-
-
-        # remove error results
-
-        if recipe.get(
-            "error"
-        ):
-
-            continue
-
-
-
-        if recipe.get(
-            "Recipe"
-        ) == "error":
-
-            continue
-
+    for recipe in recipes[:5]:
 
 
         try:
@@ -113,17 +115,6 @@ def manager_agent(food, people):
             parsed = recipe_parser_agent(
                 recipe
             )
-
-
-            if not parsed.get(
-                "Recipe"
-            ):
-
-                parsed["Recipe"] = recipe.get(
-                    "Recipe",
-                    "Unknown Recipe"
-                )
-
 
 
             parsed_recipes.append(
@@ -146,107 +137,137 @@ def manager_agent(food, people):
 
 
 
-    if not parsed_recipes:
+
+
+    # ==========================
+    # Pick first recipe with ingredients
+    # ==========================
+
+
+    selected_recipe = None
+
+
+
+    for recipe in parsed_recipes:
+
+
+        ingredients = recipe.get(
+
+            "Ingredients",
+
+            []
+
+        )
+
+
+        if ingredients:
+
+
+            selected_recipe = recipe
+
+            break
+
+
+
+
+
+    if not selected_recipe:
 
 
         return {
 
-            "error":
-            "Recipe parsing failed"
+
+            "query": food,
+
+
+            "servings": people,
+
+
+            "recipes": parsed_recipes,
+
+
+            "nutrition": {
+
+                "Total Recipe Nutrition": {},
+
+                "Nutrition Per Person": {}
+
+            }
 
         }
 
 
 
-    # -----------------------------
-    # Take first recipe nutrition
-    # -----------------------------
-
-    first_recipe = parsed_recipes[0]
 
 
+    print(
 
-    ingredients = first_recipe.get(
+        "SELECTED RECIPE:",
+
+        selected_recipe.get(
+            "Recipe"
+        )
+
+    )
+
+
+
+
+
+    ingredients = selected_recipe.get(
+
         "Ingredients",
+
         []
+
     )
 
 
-    print(
-        "RAW INGREDIENTS:"
-    )
-
 
     print(
+
+        "INGREDIENTS SENT TO USDA:",
+
         ingredients
+
     )
 
 
 
-    # -----------------------------
-    # Clean ingredients
-    # -----------------------------
-
-    clean_list = []
 
 
-
-    for item in ingredients:
-
-
-        if isinstance(
-            item,
-            str
-        ):
-
-
-            cleaned = clean_ingredient(
-                item
-            )
-
-
-
-            if cleaned:
-
-
-                clean_list.append(
-                    cleaned
-                )
-
-
-
-    print(
-        "FINAL USDA INGREDIENTS:"
-    )
-
-
-    print(
-        clean_list
-    )
-
-
-
-    # -----------------------------
+    # ==========================
     # Nutrition
-    # -----------------------------
+    # ==========================
 
-    nutrition = ingredient_agent(
-        clean_list
+
+    nutrition_result = ingredient_agent(
+
+        ingredients
+
     )
 
 
 
-    total_nutrition = nutrition.get(
+    total_nutrition = nutrition_result.get(
+
         "Total Nutrition",
+
         {}
+
     )
 
 
 
     per_person = divide_nutrition(
+
         total_nutrition,
+
         people
+
     )
+
+
 
 
 
@@ -254,26 +275,34 @@ def manager_agent(food, people):
 
 
         "query":
+
         food,
 
 
+
         "servings":
+
         people,
 
 
+
         "recipes":
+
         parsed_recipes,
 
 
-        "nutrition":
-        {
+
+        "nutrition": {
 
 
             "Total Recipe Nutrition":
+
             total_nutrition,
 
 
+
             "Nutrition Per Person":
+
             per_person
 
         }
