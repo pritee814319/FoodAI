@@ -1,246 +1,405 @@
-
 import streamlit as st
-try:
-    import matplotlib.pyplot as plt
-    print("MATPLOTLIB OK")
-except Exception as e:
-    print("MATPLOTLIB ERROR:", e)
+import pandas as pd
 
 from agents.manager_agent import manager_agent
 from agents.food_image_agent import food_image_agent
 
-st.success("Analysis Complete!")
 
 # ---------------------------------------------------
-# Food Image
+# Page Configuration
 # ---------------------------------------------------
 
-image_url = food_image_agent(food)
-
-if image_url:
-    st.image(
-        image_url,
-        caption=food.title(),
-        use_container_width=True
-    )
-
-# ---------------------------------------------------
-# Nutrition
-# ---------------------------------------------------
-
-nutrition = result.get(
-    "nutrition",
-    {}
+st.set_page_config(
+    page_title="FoodAI",
+    page_icon="🍲",
+    layout="wide"
 )
 
-total = nutrition.get(
-    "Total Recipe Nutrition",
-    {}
+
+# ---------------------------------------------------
+# Header
+# ---------------------------------------------------
+
+st.title("🍲 FoodAI")
+st.subheader("AI Food Nutrition & Recipe Analyzer")
+
+
+# ---------------------------------------------------
+# User Input
+# ---------------------------------------------------
+
+food = st.text_input(
+    "Enter food name",
+    placeholder="Example: Poha, Ramen, Biryani"
 )
 
-per = nutrition.get(
-    "Nutrition Per Person",
-    {}
+people = st.number_input(
+    "How many people are you cooking for?",
+    min_value=1,
+    value=2
 )
 
-st.subheader("🥗 Nutrition")
 
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    st.metric(
-        "Calories",
-        f"{round(total.get('Calories (kcal)',0),1)} kcal"
-    )
-
-with c2:
-    st.metric(
-        "Protein",
-        f"{round(total.get('Protein (g)',0),1)} g"
-    )
-
-with c3:
-    st.metric(
-        "Carbs",
-        f"{round(total.get('Carbohydrates (g)',0),1)} g"
-    )
-
-c4, c5, c6 = st.columns(3)
-
-with c4:
-    st.metric(
-        "Fat",
-        f"{round(total.get('Fat (g)',0),1)} g"
-    )
-
-with c5:
-    st.metric(
-        "Fiber",
-        f"{round(total.get('Fiber (g)',0),1)} g"
-    )
-
-with c6:
-    st.metric(
-        "Sodium",
-        f"{round(total.get('Sodium (mg)',0),1)} mg"
-    )
-
-st.divider()
-
-st.subheader("🍽 Nutrition Per Person")
-
-pc1, pc2, pc3 = st.columns(3)
-
-with pc1:
-    st.metric(
-        "Calories",
-        f"{round(per.get('Calories (kcal)',0),1)} kcal"
-    )
-
-with pc2:
-    st.metric(
-        "Protein",
-        f"{round(per.get('Protein (g)',0),1)} g"
-    )
-
-with pc3:
-    st.metric(
-        "Carbs",
-        f"{round(per.get('Carbohydrates (g)',0),1)} g"
-    )
-
-pc4, pc5, pc6 = st.columns(3)
-
-with pc4:
-    st.metric(
-        "Fat",
-        f"{round(per.get('Fat (g)',0),1)} g"
-    )
-
-with pc5:
-    st.metric(
-        "Fiber",
-        f"{round(per.get('Fiber (g)',0),1)} g"
-    )
-
-with pc6:
-    st.metric(
-        "Sodium",
-        f"{round(per.get('Sodium (mg)',0),1)} mg"
-    )
-
-# ---------------------------------------------------
-# Pie Chart
-# ---------------------------------------------------
-
-st.subheader("📊 Calories by Macronutrients")
-
-protein = total.get("Protein (g)", 0)
-carbs = total.get("Carbohydrates (g)", 0)
-fat = total.get("Fat (g)", 0)
-
-protein_cal = protein * 4
-carb_cal = carbs * 4
-fat_cal = fat * 9
-
-values = [protein_cal, carb_cal, fat_cal]
-labels = ["Protein", "Carbs", "Fat"]
-
-if sum(values) > 0:
-
-    fig, ax = plt.subplots(figsize=(5,5))
-
-    ax.pie(
-        values,
-        labels=labels,
-        autopct="%1.1f%%",
-        startangle=90
-    )
-
-    ax.axis("equal")
-
-    st.pyplot(fig)
-
-else:
-
-    st.info("Nutrition chart unavailable.")
-
-st.divider()
-
-# ---------------------------------------------------
-# Recipes
-# ---------------------------------------------------
-
-st.subheader("🍛 Recipes")
-
-recipes = result.get(
-    "recipes",
-    []
+analyze = st.button(
+    "🔍 Analyze Food"
 )
 
-for recipe in recipes:
 
-    st.markdown(
-        f"## {recipe.get('Recipe','Recipe')}"
+# ---------------------------------------------------
+# Run Analysis
+# ---------------------------------------------------
+
+if analyze and food:
+
+    with st.spinner("Analyzing food..."):
+
+        try:
+
+            result = manager_agent(
+                food,
+                people
+            )
+
+        except Exception as e:
+
+            st.error(
+                f"FoodAI Error: {e}"
+            )
+
+            st.stop()
+
+
+    st.success(
+        "Analysis Complete!"
     )
 
-    if recipe.get("URL"):
-        st.markdown(
-            f"🔗 **Recipe Source:** {recipe['URL']}"
-        )
 
-    ingredients = recipe.get(
-        "Ingredients",
-        []
-    )
+    # ---------------------------------------------------
+    # Food Image
+    # ---------------------------------------------------
 
-    if ingredients:
+    st.subheader("🍽 Food Image")
 
-        st.markdown("### 🥘 Ingredients")
+    try:
 
-        for item in ingredients:
-            st.write("•", item)
+        image_url = food_image_agent(food)
 
-    else:
+        if image_url:
+
+            st.image(
+                image_url,
+                caption=food.title(),
+                use_container_width=True
+            )
+
+    except Exception:
 
         st.info(
-            "Ingredients unavailable."
+            "Food image not available"
         )
 
-    instructions = recipe.get(
-        "Instructions",
+
+    # ---------------------------------------------------
+    # Nutrition
+    # ---------------------------------------------------
+
+    nutrition = result.get(
+        "nutrition",
+        {}
+    )
+
+
+    total = nutrition.get(
+        "Total Recipe Nutrition",
+        {}
+    )
+
+
+    per_person = nutrition.get(
+        "Nutrition Per Person",
+        {}
+    )
+
+
+    st.divider()
+
+    st.subheader(
+        "🥗 Nutrition Information"
+    )
+
+
+    # Total nutrition cards
+
+    col1, col2, col3 = st.columns(3)
+
+
+    col1.metric(
+        "🔥 Calories",
+        f"{total.get('Calories (kcal)',0)} kcal"
+    )
+
+
+    col2.metric(
+        "💪 Protein",
+        f"{total.get('Protein (g)',0)} g"
+    )
+
+
+    col3.metric(
+        "🍚 Carbs",
+        f"{total.get('Carbohydrates (g)',0)} g"
+    )
+
+
+    col4, col5, col6 = st.columns(3)
+
+
+    col4.metric(
+        "🥑 Fat",
+        f"{total.get('Fat (g)',0)} g"
+    )
+
+
+    col5.metric(
+        "🌾 Fiber",
+        f"{total.get('Fiber (g)',0)} g"
+    )
+
+
+    col6.metric(
+        "🧂 Sodium",
+        f"{total.get('Sodium (mg)',0)} mg"
+    )
+
+
+    # ---------------------------------------------------
+    # Per Person
+    # ---------------------------------------------------
+
+    st.subheader(
+        f"🍽 Nutrition Per Person ({people} people)"
+    )
+
+
+    p1, p2, p3 = st.columns(3)
+
+
+    p1.metric(
+        "🔥 Calories",
+        f"{per_person.get('Calories (kcal)',0)} kcal"
+    )
+
+
+    p2.metric(
+        "💪 Protein",
+        f"{per_person.get('Protein (g)',0)} g"
+    )
+
+
+    p3.metric(
+        "🍚 Carbs",
+        f"{per_person.get('Carbohydrates (g)',0)} g"
+    )
+
+
+    p4, p5, p6 = st.columns(3)
+
+
+    p4.metric(
+        "🥑 Fat",
+        f"{per_person.get('Fat (g)',0)} g"
+    )
+
+
+    p5.metric(
+        "🌾 Fiber",
+        f"{per_person.get('Fiber (g)',0)} g"
+    )
+
+
+    p6.metric(
+        "🧂 Sodium",
+        f"{per_person.get('Sodium (mg)',0)} mg"
+    )
+
+
+    # ---------------------------------------------------
+    # Nutrition Chart
+    # ---------------------------------------------------
+
+    st.subheader(
+        "📊 Macronutrient Calories"
+    )
+
+
+    protein = total.get(
+        "Protein (g)",
+        0
+    )
+
+    carbs = total.get(
+        "Carbohydrates (g)",
+        0
+    )
+
+    fat = total.get(
+        "Fat (g)",
+        0
+    )
+
+
+    chart = pd.DataFrame(
+        {
+            "Nutrient": [
+                "Protein",
+                "Carbs",
+                "Fat"
+            ],
+
+            "Calories": [
+                protein * 4,
+                carbs * 4,
+                fat * 9
+            ]
+        }
+    )
+
+
+    st.bar_chart(
+        chart.set_index(
+            "Nutrient"
+        )
+    )
+
+
+    # ---------------------------------------------------
+    # Recipes
+    # ---------------------------------------------------
+
+    st.divider()
+
+    st.subheader(
+        "🍛 Recipes"
+    )
+
+
+    recipes = result.get(
+        "recipes",
         []
     )
 
-    if instructions:
 
-        st.markdown(
-            "### 👩‍🍳 Instructions"
+    if not recipes:
+
+        st.info(
+            "No recipes found"
         )
 
-        if isinstance(
-            instructions,
-            list
-        ):
 
-            for i, step in enumerate(
-                instructions,
-                1
+    for recipe in recipes:
+
+
+        name = recipe.get(
+            "Recipe",
+            "Recipe"
+        )
+
+
+        st.markdown(
+            f"## 🍲 {name}"
+        )
+
+
+        url = recipe.get(
+            "URL"
+        )
+
+
+        if url:
+
+            st.markdown(
+                f"🔗 Recipe Source: {url}"
+            )
+
+
+        ingredients = recipe.get(
+            "Ingredients",
+            []
+        )
+
+
+        if ingredients:
+
+            st.markdown(
+                "### 🥘 Ingredients"
+            )
+
+
+            if isinstance(
+                ingredients,
+                list
             ):
+
+                for item in ingredients:
+
+                    st.write(
+                        "•",
+                        item
+                    )
+
+            else:
+
                 st.write(
-                    f"{i}. {step}"
+                    ingredients
                 )
+
+
+        instructions = recipe.get(
+            "Instructions",
+            []
+        )
+
+
+        if instructions:
+
+            st.markdown(
+                "### 👩‍🍳 Instructions"
+            )
+
+
+            if isinstance(
+                instructions,
+                list
+            ):
+
+                for index, step in enumerate(
+                    instructions,
+                    1
+                ):
+
+                    st.write(
+                        f"{index}. {step}"
+                    )
+
+            else:
+
+                st.write(
+                    instructions
+                )
+
 
         else:
 
-            st.write(
-                instructions
+            st.info(
+                "Recipe instructions available on original source."
             )
 
-    else:
 
-        st.info(
-            "Instructions unavailable."
-        )
+        st.divider()
 
-    st.divider()
+
+elif analyze and not food:
+
+    st.warning(
+        "Please enter a food name first."
+    )
