@@ -12,12 +12,14 @@ def divide_nutrition(total, people):
     for key, value in total.items():
 
         try:
+
             result[key] = round(
                 value / people,
                 2
             )
 
         except:
+
             result[key] = value
 
     return result
@@ -27,8 +29,22 @@ def divide_nutrition(total, people):
 def manager_agent(food, people):
 
 
-    print("START MANAGER:", food)
+    print(
+        "START MANAGER:",
+        food
+    )
 
+
+    print(
+        "PEOPLE:",
+        people
+    )
+
+
+
+    # -----------------------------
+    # Search recipes
+    # -----------------------------
 
     search_result = recipe_search_agent(
         food
@@ -41,26 +57,51 @@ def manager_agent(food, people):
     )
 
 
-    valid_recipes = []
+    if not recipes:
 
 
+        return {
+
+            "error":
+            "No recipes found"
+
+        }
+
+
+
+    parsed_recipes = []
+
+
+
+    # -----------------------------
+    # Parse recipes
+    # -----------------------------
 
     for recipe in recipes:
 
 
-        if not isinstance(recipe, dict):
+        if not isinstance(
+            recipe,
+            dict
+        ):
 
             continue
 
 
-        # remove error recipes
 
-        if recipe.get("error"):
+        # remove error results
+
+        if recipe.get(
+            "error"
+        ):
 
             continue
 
 
-        if recipe.get("Recipe") == "error":
+
+        if recipe.get(
+            "Recipe"
+        ) == "error":
 
             continue
 
@@ -74,9 +115,9 @@ def manager_agent(food, people):
             )
 
 
-            # keep original if parser fails
-
-            if not parsed.get("Recipe"):
+            if not parsed.get(
+                "Recipe"
+            ):
 
                 parsed["Recipe"] = recipe.get(
                     "Recipe",
@@ -84,7 +125,8 @@ def manager_agent(food, people):
                 )
 
 
-            valid_recipes.append(
+
+            parsed_recipes.append(
                 parsed
             )
 
@@ -93,29 +135,34 @@ def manager_agent(food, people):
 
 
             print(
-                "Parser failed:",
+                "PARSER ERROR:",
                 e
             )
 
-            valid_recipes.append(
+
+            parsed_recipes.append(
                 recipe
             )
 
 
 
-    if not valid_recipes:
+    if not parsed_recipes:
 
 
         return {
 
             "error":
-            "No valid recipes found"
+            "Recipe parsing failed"
 
         }
 
 
 
-    first_recipe = valid_recipes[0]
+    # -----------------------------
+    # Take first recipe nutrition
+    # -----------------------------
+
+    first_recipe = parsed_recipes[0]
 
 
 
@@ -126,56 +173,79 @@ def manager_agent(food, people):
 
 
     print(
-        "INGREDIENTS BEFORE CLEAN:",
+        "RAW INGREDIENTS:"
+    )
+
+
+    print(
         ingredients
     )
 
 
 
-    cleaned = []
+    # -----------------------------
+    # Clean ingredients
+    # -----------------------------
+
+    clean_list = []
 
 
-for item in ingredients:
+
+    for item in ingredients:
 
 
-    if isinstance(item, str):
+        if isinstance(
+            item,
+            str
+        ):
 
 
-        value = clean_ingredient(
-            item
-        )
-
-
-        if value:
-
-            cleaned.append(
-                value
+            cleaned = clean_ingredient(
+                item
             )
 
 
 
-print(
-    "FINAL USDA INGREDIENTS:",
-    cleaned
-)
+            if cleaned:
+
+
+                clean_list.append(
+                    cleaned
+                )
 
 
 
     print(
-        "CLEAN INGREDIENTS:",
-        cleaned
+        "FINAL USDA INGREDIENTS:"
     )
 
 
+    print(
+        clean_list
+    )
+
+
+
+    # -----------------------------
+    # Nutrition
+    # -----------------------------
 
     nutrition = ingredient_agent(
-        cleaned
+        clean_list
     )
 
 
-    total = nutrition.get(
+
+    total_nutrition = nutrition.get(
         "Total Nutrition",
         {}
+    )
+
+
+
+    per_person = divide_nutrition(
+        total_nutrition,
+        people
     )
 
 
@@ -192,21 +262,19 @@ print(
 
 
         "recipes":
-        valid_recipes,
+        parsed_recipes,
 
 
         "nutrition":
         {
 
+
             "Total Recipe Nutrition":
-            total,
+            total_nutrition,
 
 
             "Nutrition Per Person":
-            divide_nutrition(
-                total,
-                people
-            )
+            per_person
 
         }
 
