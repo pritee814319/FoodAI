@@ -1,5 +1,5 @@
 [project]
-requires-python = ">=3.12,<3.13"
+requires-python = "==3.12.*"
 
 dependencies = [
     "streamlit",
@@ -12,5 +12,3 @@ dependencies = [
     "pandas",
     "pillow"
 ]
-
-# FoodAI Python version lock
