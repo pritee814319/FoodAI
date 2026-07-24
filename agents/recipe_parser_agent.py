@@ -1,99 +1,105 @@
 import requests
 from bs4 import BeautifulSoup
-import re
+import json
 
 
 
-BLOCK_WORDS = [
+def clean_instruction(text):
 
-    "faq",
-    "frequently asked",
-    "expert tips",
-    "troubleshooting",
-    "more breakfast recipes",
-    "more recipes",
-    "photo guide",
-    "related recipes",
-    "this post was first published",
-    "updated & republished",
-    "comments",
-    "reviews",
-    "share with friends",
-    "print recipe",
-    "jump to recipe"
-
-]
-
-
-
-STOP_WORDS = [
-
-    "chilla recipe",
-    "methi thepla",
-    "upma recipe",
-    "rava idli",
-    "semiya upma",
-    "akki roti"
-
-]
-
-
-
-
-def clean_line(text):
-
-    text=text.strip()
-
-
-    if len(text)<3:
-
+    if not isinstance(text, str):
         return ""
 
 
+    bad_words = [
 
-    lower=text.lower()
+        "share",
+        "subscribe",
+        "comments",
+        "reviews",
+        "about",
+        "table of contents",
+        "more recipes",
+        "related"
+
+    ]
 
 
-    for word in BLOCK_WORDS:
+    lower = text.lower()
+
+
+    for word in bad_words:
 
         if word in lower:
 
             return ""
 
 
-
-    for word in STOP_WORDS:
-
-        if word in lower:
-
-            return ""
-
-
-
-    return text
+    return text.strip()
 
 
 
 
 
-def extract_image(soup):
+def extract_json_ld(soup):
 
 
-    image = soup.find(
-        "meta",
-        property="og:image"
+    scripts = soup.find_all(
+        "script",
+        type="application/ld+json"
     )
 
 
-    if image:
-
-        return image.get(
-            "content"
-        )
+    for script in scripts:
 
 
+        try:
 
-    return ""
+            data = json.loads(
+                script.string
+            )
+
+
+            if isinstance(data, list):
+
+                for item in data:
+
+                    if item.get("@type") == "Recipe":
+
+                        return item
+
+
+
+            elif isinstance(data, dict):
+
+
+                if data.get("@type") == "Recipe":
+
+                    return data
+
+
+
+                graph = data.get(
+                    "@graph",
+                    []
+                )
+
+
+                for item in graph:
+
+                    if item.get("@type") == "Recipe":
+
+                        return item
+
+
+
+        except Exception:
+
+            continue
+
+
+
+    return None
+
 
 
 
@@ -111,31 +117,54 @@ def recipe_parser_agent(recipe):
     if not url:
 
 
-        return recipe
+        return {
+
+
+            "Recipe":
+            recipe.get(
+                "Recipe",
+                "Unknown Recipe"
+            ),
+
+
+            "URL":"",
+
+
+            "Image":"",
+
+
+            "Ingredients":[],
+
+
+            "Instructions":[]
+
+        }
+
+
 
 
 
     try:
 
 
-        response=requests.get(
+        response = requests.get(
 
             url,
-
-            timeout=15,
 
             headers={
 
                 "User-Agent":
                 "Mozilla/5.0"
 
-            }
+            },
+
+            timeout=15
 
         )
 
 
 
-        soup=BeautifulSoup(
+        soup = BeautifulSoup(
 
             response.text,
 
@@ -145,104 +174,143 @@ def recipe_parser_agent(recipe):
 
 
 
-        image_url = extract_image(
+        recipe_data = extract_json_ld(
             soup
         )
 
 
 
-        text=soup.get_text(
-            "\n"
+        if not recipe_data:
+
+
+            print(
+                "No JSON recipe found:",
+                url
+            )
+
+
+            return {
+
+
+                "Recipe":
+                recipe.get(
+                    "Recipe",
+                    "Recipe"
+                ),
+
+
+                "URL":
+                url,
+
+
+                "Image":"",
+
+
+                "Ingredients":[],
+
+
+                "Instructions":[]
+
+            }
+
+
+
+
+        # -------------------------
+        # IMAGE
+        # -------------------------
+
+
+        image = recipe_data.get(
+            "image",
+            ""
+        )
+
+
+        if isinstance(image,list):
+
+            image=image[0]
+
+
+
+        # -------------------------
+        # INGREDIENTS
+        # -------------------------
+
+
+        ingredients = recipe_data.get(
+            "recipeIngredient",
+            []
         )
 
 
 
-        lines=[
-
-            clean_line(x)
-
-            for x in text.split("\n")
-
-        ]
+        clean_ingredients=[]
 
 
-
-        lines=[
-
-            x for x in lines
-
-            if x
-
-        ]
+        for item in ingredients:
 
 
+            if isinstance(item,str):
 
-        ingredients=[]
+                item=item.strip()
+
+
+                if item:
+
+                    clean_ingredients.append(
+                        item
+                    )
+
+
+
+        # -------------------------
+        # INSTRUCTIONS
+        # -------------------------
+
 
         instructions=[]
 
 
-        mode=None
+        raw_steps = recipe_data.get(
+            "recipeInstructions",
+            []
+        )
 
 
 
-        for line in lines:
+        for step in raw_steps:
 
 
-
-            low=line.lower()
-
-
-
-            if "ingredient" in low:
-
-                mode="ingredients"
-
-                continue
-
-
-
-            if (
-
-                "instruction" in low
-
-                or
-
-                "direction" in low
-
-                or
-
-                "method" in low
-
+            if isinstance(
+                step,
+                dict
             ):
 
-                mode="instructions"
 
-                continue
-
-
-
-            if mode=="ingredients":
+                text = step.get(
+                    "text",
+                    ""
+                )
 
 
-                if len(ingredients)<25:
+            else:
 
-                    ingredients.append(
-                        line
-                    )
+                text=str(step)
 
 
 
-            elif mode=="instructions":
+            text=clean_instruction(
+                text
+            )
 
 
-                if len(instructions)<20:
-
-                    instructions.append(
-                        line
-                    )
+            if text:
 
 
+                instructions.append(
+                    text
+                )
 
 
 
@@ -251,9 +319,12 @@ def recipe_parser_agent(recipe):
 
             "Recipe":
 
-            recipe.get(
-                "Recipe",
-                recipe.get("title")
+            recipe_data.get(
+                "name",
+                recipe.get(
+                    "Recipe",
+                    "Recipe"
+                )
             ),
 
 
@@ -266,19 +337,19 @@ def recipe_parser_agent(recipe):
 
             "Image":
 
-            image_url,
+            image,
 
 
 
             "Ingredients":
 
-            ingredients,
+            clean_ingredients[:30],
 
 
 
             "Instructions":
 
-            instructions
+            instructions[:20]
 
         }
 
@@ -288,15 +359,20 @@ def recipe_parser_agent(recipe):
 
 
         print(
-            "Parser Error:",
+            "PARSER ERROR:",
             e
         )
 
 
+
         return {
 
+
             "Recipe":
-            recipe.get("Recipe"),
+            recipe.get(
+                "Recipe",
+                "Recipe"
+            ),
 
 
             "URL":
@@ -307,6 +383,7 @@ def recipe_parser_agent(recipe):
 
 
             "Ingredients":[],
+
 
             "Instructions":[]
 
