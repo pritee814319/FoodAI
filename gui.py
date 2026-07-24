@@ -1,299 +1,93 @@
-import streamlit as st
-
-from agents.manager_agent import manager_agent
+st.subheader("🍛 Recipes")
 
 
-
-st.set_page_config(
-    page_title="FoodAI",
-    page_icon="🍲"
+recipes = result.get(
+    "recipes",
+    []
 )
 
 
 
-st.title("🍲 FoodAI")
-
-st.write(
-    "AI Food Nutrition & Recipe Analyzer"
-)
+for recipe in recipes:
 
 
-
-food = st.text_input(
-    "Enter food name",
-    placeholder="Example: Poha, Pizza, Sushi"
-)
+    st.markdown(
+        f"## {recipe.get('Recipe','Recipe')}"
+    )
 
 
+    # Recipe Image
 
-people = st.number_input(
-    "How many people are you cooking for?",
-    min_value=1,
-    max_value=50,
-    value=2
-)
-
+    image = recipe.get(
+        "Image",
+        ""
+    )
 
 
-if st.button("Analyze Food"):
+    if image:
 
-
-    if not food.strip():
-
-
-        st.warning(
-            "Please enter food name"
+        st.image(
+            image,
+            width=400
         )
 
 
-    else:
 
+    st.write(
+        "🔗 Recipe Source:"
+    )
 
-        with st.spinner(
-            "Analyzing your food..."
-        ):
 
+    st.write(
+        recipe.get(
+            "URL",
+            ""
+        )
+    )
 
-            try:
 
 
-                result = manager_agent(
-                    food,
-                    people
-                )
+    ingredients = recipe.get(
+        "Ingredients",
+        []
+    )
 
 
+    if ingredients:
 
-                if result.get("error"):
 
+        st.write(
+            "🥘 Ingredients"
+        )
 
-                    st.error(
-                        result["error"]
-                    )
 
+        for item in ingredients:
 
+            st.write(
+                "-",
+                item
+            )
 
-                else:
 
+    instructions = recipe.get(
+        "Instructions",
+        []
+    )
 
 
-                    st.success(
-                        "Analysis Complete!"
-                    )
+    if instructions:
 
 
+        st.write(
+            "👩‍🍳 Instructions"
+        )
 
-                    # =========================
-                    # Nutrition
-                    # =========================
 
+        for step in instructions:
 
-                    st.subheader(
-                        "🥗 Nutrition Information"
-                    )
+            st.write(
+                step
+            )
 
 
-
-                    nutrition = result.get(
-                        "nutrition",
-                        {}
-                    )
-
-
-
-                    st.write(
-                        "Total Recipe Nutrition"
-                    )
-
-
-                    st.json(
-                        nutrition.get(
-                            "Total Recipe Nutrition",
-                            {}
-                        )
-                    )
-
-
-
-                    st.write(
-                        f"Nutrition Per Person ({people} people)"
-                    )
-
-
-                    st.json(
-                        nutrition.get(
-                            "Nutrition Per Person",
-                            {}
-                        )
-                    )
-
-
-
-                    # =========================
-                    # Recipes
-                    # =========================
-
-
-                    st.subheader(
-                        "🍛 Recipes"
-                    )
-
-
-
-                    recipes = result.get(
-                        "recipes",
-                        []
-                    )
-
-
-
-                    if not recipes:
-
-
-                        st.info(
-                            "No recipes available."
-                        )
-
-
-
-                    for recipe in recipes:
-
-
-
-                        if not isinstance(
-                            recipe,
-                            dict
-                        ):
-
-                            continue
-
-
-
-                        recipe_name = recipe.get(
-                            "Recipe",
-                            ""
-                        )
-
-
-
-                        if not recipe_name:
-
-                            continue
-
-
-
-                        st.markdown(
-                            "---"
-                        )
-
-
-                        st.markdown(
-                            f"## {recipe_name}"
-                        )
-
-
-
-                        url = recipe.get(
-                            "URL",
-                            ""
-                        )
-
-
-
-                        if url:
-
-
-                            st.write(
-                                "🔗 Recipe Source:"
-                            )
-
-
-                            st.write(
-                                url
-                            )
-
-
-
-                        # ---------------------
-                        # Ingredients
-                        # ---------------------
-
-
-                        ingredients = recipe.get(
-                            "Ingredients",
-                            []
-                        )
-
-
-
-                        if ingredients:
-
-
-
-                            st.write(
-                                "### 🥘 Ingredients"
-                            )
-
-
-
-                            for item in ingredients:
-
-
-                                st.write(
-                                    "-",
-                                    item
-                                )
-
-
-                        else:
-
-
-                            st.info(
-                                "Ingredients are not available for this recipe."
-                            )
-
-
-
-                        # ---------------------
-                        # Instructions
-                        # ---------------------
-
-
-                        instructions = recipe.get(
-                            "Instructions",
-                            ""
-                        )
-
-
-
-                        if instructions:
-
-
-
-                            st.write(
-                                "### 👩‍🍳 Instructions"
-                            )
-
-
-                            st.write(
-                                instructions
-                            )
-
-
-
-                        elif url:
-
-
-
-                            st.info(
-                                "Recipe instructions are available on the original source."
-                            )
-
-
-
-            except Exception as e:
-
-
-                st.error(
-                    f"FoodAI Error: {e}"
-                )
+    st.divider()
