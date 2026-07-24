@@ -151,7 +151,10 @@ if st.button("Analyze Food"):
                         )
 
 
-                    for recipe in recipes:
+                   for recipe in recipes:
+
+    if recipe.get("error"):
+        continue
 
 
                         st.markdown(
