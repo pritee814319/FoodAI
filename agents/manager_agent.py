@@ -31,7 +31,10 @@ def manager_agent(food, people):
         }
 
     recipe = recipes[0]
-
+from agents.recipe_parser_agent import recipe_parser_agent
+recipe = recipe_parser_agent(
+    recipe
+)
     ingredients = recipe.get(
         "Ingredients",
         []
