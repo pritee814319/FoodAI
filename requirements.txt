@@ -4,4 +4,6 @@ beautifulsoup4
 lxml
 python-dotenv
 tavily-python
-matplotlib
+matplotlib==3.10.0
+pandas
+Pillow
