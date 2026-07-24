@@ -21,7 +21,7 @@ st.write(
 
 food = st.text_input(
     "Enter food name",
-    placeholder="Example: Poha, Pizza, Sushi, Ramen"
+    placeholder="Example: Poha, Pizza, Sushi"
 )
 
 
@@ -40,6 +40,7 @@ if st.button("Analyze Food"):
 
     if not food.strip():
 
+
         st.warning(
             "Please enter food name"
         )
@@ -49,7 +50,7 @@ if st.button("Analyze Food"):
 
 
         with st.spinner(
-            "FoodAI agents are working..."
+            "Analyzing your food..."
         ):
 
 
@@ -71,7 +72,9 @@ if st.button("Analyze Food"):
                     )
 
 
+
                 else:
+
 
 
                     st.success(
@@ -80,9 +83,10 @@ if st.button("Analyze Food"):
 
 
 
-                    # -----------------------
+                    # =========================
                     # Nutrition
-                    # -----------------------
+                    # =========================
+
 
                     st.subheader(
                         "🥗 Nutrition Information"
@@ -125,9 +129,10 @@ if st.button("Analyze Food"):
 
 
 
-                    # -----------------------
+                    # =========================
                     # Recipes
-                    # -----------------------
+                    # =========================
+
 
                     st.subheader(
                         "🍛 Recipes"
@@ -145,8 +150,8 @@ if st.button("Analyze Food"):
                     if not recipes:
 
 
-                        st.warning(
-                            "No recipes found"
+                        st.info(
+                            "No recipes available."
                         )
 
 
@@ -164,9 +169,14 @@ if st.button("Analyze Food"):
 
 
 
-                        if recipe.get(
-                            "error"
-                        ):
+                        recipe_name = recipe.get(
+                            "Recipe",
+                            ""
+                        )
+
+
+
+                        if not recipe_name:
 
                             continue
 
@@ -177,9 +187,8 @@ if st.button("Analyze Food"):
                         )
 
 
-
                         st.markdown(
-                            f"## {recipe.get('Recipe','Recipe')}"
+                            f"## {recipe_name}"
                         )
 
 
@@ -195,7 +204,7 @@ if st.button("Analyze Food"):
 
 
                             st.write(
-                                "🔗 Recipe URL:"
+                                "🔗 Recipe Source:"
                             )
 
 
@@ -205,7 +214,10 @@ if st.button("Analyze Food"):
 
 
 
+                        # ---------------------
                         # Ingredients
+                        # ---------------------
+
 
                         ingredients = recipe.get(
                             "Ingredients",
@@ -217,9 +229,11 @@ if st.button("Analyze Food"):
                         if ingredients:
 
 
+
                             st.write(
                                 "### 🥘 Ingredients"
                             )
+
 
 
                             for item in ingredients:
@@ -235,12 +249,15 @@ if st.button("Analyze Food"):
 
 
                             st.info(
-                                "Ingredients will be extracted by Recipe Parser Agent"
+                                "Ingredients are not available for this recipe."
                             )
 
 
 
+                        # ---------------------
                         # Instructions
+                        # ---------------------
+
 
                         instructions = recipe.get(
                             "Instructions",
@@ -250,6 +267,7 @@ if st.button("Analyze Food"):
 
 
                         if instructions:
+
 
 
                             st.write(
@@ -262,11 +280,13 @@ if st.button("Analyze Food"):
                             )
 
 
-                        else:
+
+                        elif url:
+
 
 
                             st.info(
-                                "Instructions will be extracted by Recipe Parser Agent"
+                                "Recipe instructions are available on the original source."
                             )
 
 
