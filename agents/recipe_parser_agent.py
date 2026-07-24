@@ -6,10 +6,12 @@ import json
 
 def recipe_parser_agent(recipe):
 
+
     print(
         "PARSING RECIPE:",
         recipe.get("Recipe")
     )
+
 
 
     url = recipe.get(
@@ -26,12 +28,14 @@ def recipe_parser_agent(recipe):
 
     try:
 
+
         headers = {
 
             "User-Agent":
             "Mozilla/5.0"
 
         }
+
 
 
         response = requests.get(
@@ -41,10 +45,12 @@ def recipe_parser_agent(recipe):
         )
 
 
+
         print(
             "STATUS:",
             response.status_code
         )
+
 
 
         if response.status_code != 200:
@@ -59,6 +65,7 @@ def recipe_parser_agent(recipe):
         )
 
 
+
         ingredients = []
 
         instructions = []
@@ -67,9 +74,9 @@ def recipe_parser_agent(recipe):
 
 
 
-        # -----------------------------------
-        # Look for Schema Recipe JSON
-        # -----------------------------------
+        # -----------------------------
+        # Schema.org JSON Recipe Data
+        # -----------------------------
 
         scripts = soup.find_all(
             "script",
@@ -77,17 +84,23 @@ def recipe_parser_agent(recipe):
         )
 
 
+
         for script in scripts:
 
 
             try:
+
 
                 data = json.loads(
                     script.string
                 )
 
 
-                if isinstance(data, list):
+
+                if isinstance(
+                    data,
+                    list
+                ):
 
                     items = data
 
@@ -100,9 +113,11 @@ def recipe_parser_agent(recipe):
                 for item in items:
 
 
-                    if item.get(
-                        "@type"
-                    ) == "Recipe" or "Recipe" in str(item.get("@type")):
+
+                    if "Recipe" in str(
+                        item.get("@type")
+                    ):
+
 
 
                         ingredients = item.get(
@@ -111,10 +126,19 @@ def recipe_parser_agent(recipe):
                         )
 
 
+
                         steps = item.get(
                             "recipeInstructions",
                             []
                         )
+
+
+
+                        servings = item.get(
+                            "recipeYield",
+                            ""
+                        )
+
 
 
                         if isinstance(
@@ -122,12 +146,15 @@ def recipe_parser_agent(recipe):
                             list
                         ):
 
+
                             for step in steps:
+
 
                                 if isinstance(
                                     step,
                                     dict
                                 ):
+
 
                                     instructions.append(
                                         step.get(
@@ -138,11 +165,14 @@ def recipe_parser_agent(recipe):
 
                                 else:
 
+
                                     instructions.append(
                                         step
                                     )
 
+
                         else:
+
 
                             instructions.append(
                                 steps
@@ -150,59 +180,56 @@ def recipe_parser_agent(recipe):
 
 
 
-                        servings = item.get(
-                            "recipeYield",
-                            ""
-                        )
-
-
             except Exception:
+
 
                 pass
 
 
 
-        # -----------------------------------
-        # Fallback text extraction
-        # -----------------------------------
+        # -----------------------------
+        # Clean Ingredients
+        # -----------------------------
 
-        if not ingredients:
+        clean = []
 
 
-            for li in soup.find_all(
-                "li"
+
+        for item in ingredients:
+
+
+            if not isinstance(
+                item,
+                str
             ):
 
-                text = li.get_text(
-                    " ",
-                    strip=True
+                continue
+
+
+
+            item = item.strip()
+
+
+
+            # remove very long descriptions
+
+            if len(item) <= 120:
+
+
+                clean.append(
+                    item
                 )
 
 
-                if any(
-                    x in text.lower()
-                    for x in [
-                        "cup",
-                        "tbsp",
-                        "tsp",
-                        "onion",
-                        "salt",
-                        "oil"
-                    ]
-                ):
 
-                    ingredients.append(
-                        text
-                    )
+        recipe["Ingredients"] = clean[:40]
 
-
-
-        recipe["Ingredients"] = ingredients
 
 
         recipe["Instructions"] = "\n".join(
             instructions
         )
+
 
 
         recipe["Servings"] = servings
@@ -211,7 +238,7 @@ def recipe_parser_agent(recipe):
 
         print(
             "INGREDIENTS FOUND:",
-            len(ingredients)
+            len(clean)
         )
 
 
@@ -219,6 +246,7 @@ def recipe_parser_agent(recipe):
             "INSTRUCTIONS FOUND:",
             len(instructions)
         )
+
 
 
         return recipe
