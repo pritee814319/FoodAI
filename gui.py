@@ -56,10 +56,16 @@ if analyze and food:
         try:
 
             result = manager_agent(
-                food,
-                people
-            )
+    food_name=food,
+    people=people
+)
+result = manager_agent(
+    food_name=food,
+    people=people
+)
 
+st.write("DEBUG RESULT:")
+st.write(result)
         except Exception as e:
 
             st.error(
