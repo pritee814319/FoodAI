@@ -135,7 +135,17 @@ if recipe.get("Category"):
         "Category:",
         recipe.get("Category")
     )
+if recipe.get("Instructions"):
 
+    st.write(
+        recipe.get("Instructions")
+    )
+
+else:
+
+    st.write(
+        "Recipe details will be extracted..."
+    )
 
                         st.write(
                             "### Ingredients"
