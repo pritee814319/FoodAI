@@ -3,7 +3,9 @@ from bs4 import BeautifulSoup
 import json
 
 
+
 def recipe_parser_agent(recipe):
+
 
     print(
         "PARSING RECIPE:",
@@ -25,10 +27,14 @@ def recipe_parser_agent(recipe):
 
     try:
 
+
         headers = {
+
             "User-Agent":
             "Mozilla/5.0"
+
         }
+
 
 
         response = requests.get(
@@ -44,6 +50,7 @@ def recipe_parser_agent(recipe):
         )
 
 
+
         if response.status_code != 200:
 
             return recipe
@@ -56,15 +63,17 @@ def recipe_parser_agent(recipe):
         )
 
 
+
         ingredients = []
 
         instructions = []
 
 
 
-        # -------------------------
-        # Method 1 Schema.org
-        # -------------------------
+        # ==================================
+        # Read Schema.org Recipe Data
+        # ==================================
+
 
         scripts = soup.find_all(
             "script",
@@ -72,135 +81,171 @@ def recipe_parser_agent(recipe):
         )
 
 
+
         for script in scripts:
 
 
             try:
+
+
+                if not script.string:
+
+                    continue
+
+
 
                 data = json.loads(
                     script.string
                 )
 
 
-                if isinstance(data, list):
+
+                if isinstance(
+                    data,
+                    list
+                ):
 
                     items = data
 
+
                 else:
 
-                    items = [data]
+                    items = [
+                        data
+                    ]
 
 
 
                 for item in items:
 
 
-                    if "Recipe" in str(
-                        item.get("@type","")
+
+                    recipe_type = str(
+                        item.get(
+                            "@type",
+                            ""
+                        )
+                    )
+
+
+
+                    if "Recipe" not in recipe_type:
+
+                        continue
+
+
+
+                    # --------------------------
+                    # Ingredients
+                    # --------------------------
+
+
+                    ing = item.get(
+                        "recipeIngredient",
+                        []
+                    )
+
+
+                    if isinstance(
+                        ing,
+                        list
                     ):
 
-
                         ingredients.extend(
-                            item.get(
-                                "recipeIngredient",
-                                []
-                            )
+                            ing
                         )
 
 
-                      steps = item.get(
-    "recipeInstructions",
-    []
-)
+
+                    # --------------------------
+                    # Instructions
+                    # --------------------------
 
 
-if isinstance(steps, list):
+                    steps = item.get(
+                        "recipeInstructions",
+                        []
+                    )
 
 
-    for step in steps:
+
+                    if isinstance(
+                        steps,
+                        list
+                    ):
 
 
-        if isinstance(
-            step,
-            dict
-        ):
+
+                        for step in steps:
 
 
-            text = step.get(
-                "text",
-                ""
-            )
+
+                            if isinstance(
+                                step,
+                                dict
+                            ):
 
 
-            if text:
+                                text = step.get(
+                                    "text",
+                                    ""
+                                )
 
-                instructions.append(
-                    text
+
+                                if text:
+
+                                    instructions.append(
+                                        text
+                                    )
+
+
+
+                            elif isinstance(
+                                step,
+                                str
+                            ):
+
+
+                                instructions.append(
+                                    step
+                                )
+
+
+
+
+                    elif isinstance(
+                        steps,
+                        str
+                    ):
+
+
+                        instructions.append(
+                            steps
+                        )
+
+
+
+            except Exception as e:
+
+
+                print(
+                    "JSON PARSE ERROR:",
+                    e
                 )
 
 
-        elif isinstance(
-            step,
-            str
-        ):
 
 
-            instructions.append(
-                step
-            )
+        # ==================================
+        # HTML fallback
+        # ==================================
 
-
-elif isinstance(
-    steps,
-    str
-):
-
-
-    instructions.append(
-        steps
-    )
-
-
-                        if isinstance(
-                            steps,
-                            list
-                        ):
-
-                            for s in steps:
-
-                                if isinstance(
-                                    s,
-                                    dict
-                                ):
-
-                                    instructions.append(
-                                        s.get(
-                                            "text",
-                                            ""
-                                        )
-                                    )
-
-                                else:
-
-                                    instructions.append(
-                                        s
-                                    )
-
-
-            except:
-
-                pass
-
-
-
-        # -------------------------
-        # Method 2 HTML fallback
-        # -------------------------
 
         if not ingredients:
 
 
-            possible = soup.find_all(
+
+            tags = soup.find_all(
                 [
                     "li",
                     "p"
@@ -208,7 +253,9 @@ elif isinstance(
             )
 
 
-            for tag in possible:
+
+            for tag in tags:
+
 
 
                 text = tag.get_text(
@@ -217,23 +264,31 @@ elif isinstance(
                 )
 
 
-                words = text.lower()
+
+                lower = text.lower()
+
 
 
                 if any(
-                    x in words
-                    for x in [
+                    word in lower
+                    for word in [
+
                         "cup",
                         "tbsp",
                         "tsp",
                         "poha",
-                        "rice",
                         "onion",
-                        "oil"
+                        "rice",
+                        "oil",
+                        "peanut"
+
                     ]
                 ):
 
+
+
                     if len(text) < 150:
+
 
                         ingredients.append(
                             text
@@ -241,7 +296,12 @@ elif isinstance(
 
 
 
-        # remove duplicates
+
+
+        # ==================================
+        # Clean duplicates
+        # ==================================
+
 
         ingredients = list(
             dict.fromkeys(
@@ -250,12 +310,12 @@ elif isinstance(
         )
 
 
-        recipe["Ingredients"] = ingredients[:30]
-
-
-        recipe["Instructions"] = "\n".join(
-            instructions
+        instructions = list(
+            dict.fromkeys(
+                instructions
+            )
         )
+
 
 
         print(
@@ -267,6 +327,15 @@ elif isinstance(
         print(
             "INSTRUCTIONS FOUND:",
             len(instructions)
+        )
+
+
+
+        recipe["Ingredients"] = ingredients[:30]
+
+
+        recipe["Instructions"] = "\n\n".join(
+            instructions[:20]
         )
 
 
