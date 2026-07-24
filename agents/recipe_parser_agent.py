@@ -1,37 +1,99 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
 
 
-BAD_WORDS = [
+BLOCK_WORDS = [
 
     "faq",
-    "reviews",
-    "comments",
+    "frequently asked",
     "expert tips",
     "troubleshooting",
-    "nutrition facts",
+    "more breakfast recipes",
+    "more recipes",
+    "photo guide",
+    "related recipes",
+    "this post was first published",
+    "updated & republished",
+    "comments",
+    "reviews",
+    "share with friends",
+    "print recipe",
     "jump to recipe"
 
 ]
 
 
 
+STOP_WORDS = [
 
-def clean_text(text):
+    "chilla recipe",
+    "methi thepla",
+    "upma recipe",
+    "rava idli",
+    "semiya upma",
+    "akki roti"
 
+]
+
+
+
+
+def clean_line(text):
 
     text=text.strip()
 
 
-    for word in BAD_WORDS:
+    if len(text)<3:
 
-        if word.lower() in text.lower():
+        return ""
+
+
+
+    lower=text.lower()
+
+
+    for word in BLOCK_WORDS:
+
+        if word in lower:
 
             return ""
 
 
+
+    for word in STOP_WORDS:
+
+        if word in lower:
+
+            return ""
+
+
+
     return text
+
+
+
+
+
+def extract_image(soup):
+
+
+    image = soup.find(
+        "meta",
+        property="og:image"
+    )
+
+
+    if image:
+
+        return image.get(
+            "content"
+        )
+
+
+
+    return ""
 
 
 
@@ -44,7 +106,6 @@ def recipe_parser_agent(recipe):
         "URL",
         ""
     )
-
 
 
     if not url:
@@ -61,7 +122,7 @@ def recipe_parser_agent(recipe):
 
             url,
 
-            timeout=10,
+            timeout=15,
 
             headers={
 
@@ -84,6 +145,12 @@ def recipe_parser_agent(recipe):
 
 
 
+        image_url = extract_image(
+            soup
+        )
+
+
+
         text=soup.get_text(
             "\n"
         )
@@ -92,7 +159,7 @@ def recipe_parser_agent(recipe):
 
         lines=[
 
-            clean_text(x)
+            clean_line(x)
 
             for x in text.split("\n")
 
@@ -115,7 +182,6 @@ def recipe_parser_agent(recipe):
         instructions=[]
 
 
-
         mode=None
 
 
@@ -136,7 +202,19 @@ def recipe_parser_agent(recipe):
 
 
 
-            if "instruction" in low or "direction" in low:
+            if (
+
+                "instruction" in low
+
+                or
+
+                "direction" in low
+
+                or
+
+                "method" in low
+
+            ):
 
                 mode="instructions"
 
@@ -147,14 +225,22 @@ def recipe_parser_agent(recipe):
             if mode=="ingredients":
 
 
-                ingredients.append(line)
+                if len(ingredients)<25:
+
+                    ingredients.append(
+                        line
+                    )
 
 
 
             elif mode=="instructions":
 
 
-                instructions.append(line)
+                if len(instructions)<20:
+
+                    instructions.append(
+                        line
+                    )
 
 
 
@@ -178,15 +264,21 @@ def recipe_parser_agent(recipe):
 
 
 
+            "Image":
+
+            image_url,
+
+
+
             "Ingredients":
 
-            ingredients[:20],
+            ingredients,
 
 
 
             "Instructions":
 
-            instructions[:15]
+            instructions
 
         }
 
@@ -196,13 +288,12 @@ def recipe_parser_agent(recipe):
 
 
         print(
-            "PARSER ERROR",
+            "Parser Error:",
             e
         )
 
 
         return {
-
 
             "Recipe":
             recipe.get("Recipe"),
@@ -210,6 +301,9 @@ def recipe_parser_agent(recipe):
 
             "URL":
             url,
+
+
+            "Image":"",
 
 
             "Ingredients":[],
