@@ -115,33 +115,23 @@ def recipe_parser_agent(recipe):
             # Ingredients detection
 
             if (
+    any(
+        unit in lower
+        for unit in [
+            "cup",
+            "tbsp",
+            "tsp",
+            "gram",
+            "kg",
+            "ml",
+            "oz",
+            "lb"
+        ]
+    )
+    and len(line.split()) < 12
+):
 
-                any(
-                    unit in lower
-
-                    for unit in [
-
-                        "cup",
-                        "tbsp",
-                        "tablespoon",
-                        "tsp",
-                        "teaspoon",
-                        "gram",
-                        "kg",
-                        "ml",
-                        "g ",
-                        "ounce",
-                        "oz"
-
-                    ]
-                )
-
-                or line.startswith("-")
-
-            ):
-
-                ingredients.append(
-                    line.replace(
+    ingredients.append(line) replace(
                         "-",
                         ""
                     ).strip()
