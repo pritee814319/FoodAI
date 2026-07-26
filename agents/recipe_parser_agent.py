@@ -1,169 +1,108 @@
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
 
 
-
-def recipe_parser_agent(recipe):
+def recipe_parser_agent(url):
 
     try:
 
-        # -----------------------------
-        # Get recipe information
-        # -----------------------------
-
-        if isinstance(recipe, dict):
-
-            url = recipe.get(
-                "url",
-                ""
-            )
-
-            title = recipe.get(
-                "title",
-                "Recipe"
-            )
-
-            content = recipe.get(
-                "content",
-                ""
-            )
-
-        else:
-
-            url = recipe
-            title = "Recipe"
-            content = ""
+        if not url:
+            return {
+                "Ingredients": [],
+                "Instructions": []
+            }
 
 
-        text = content
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
 
 
-        # -----------------------------
-        # Try website extraction
-        # -----------------------------
-
-        if url:
-
-
-            try:
-
-                headers = {
-                    "User-Agent":
-                    "Mozilla/5.0"
-                }
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=10
+        )
 
 
-                page = requests.get(
-                    url,
-                    headers=headers,
-                    timeout=8
-                )
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
 
 
-                soup = BeautifulSoup(
-                    page.text,
-                    "html.parser"
-                )
-
-
-                website_text = soup.get_text(
-                    "\n"
-                )
-
-
-                if len(website_text) > len(text):
-
-                    text = website_text
-
-
-            except Exception:
-
-                pass
-
-
-
-        # -----------------------------
-        # Extract lines
-        # -----------------------------
+        text = soup.get_text("\n")
 
 
         lines = [
-
-            x.strip()
-
-            for x in text.split("\n")
-
-            if x.strip()
-
+            line.strip()
+            for line in text.split("\n")
+            if line.strip()
         ]
 
 
-
         ingredients = []
-
         instructions = []
 
+
+        skip_words = [
+            "share",
+            "facebook",
+            "instagram",
+            "twitter",
+            "newsletter",
+            "advertisement",
+            "jump to recipe",
+            "related recipes",
+            "comments"
+        ]
 
 
         for line in lines:
 
-
             lower = line.lower()
 
 
-
-            # Ingredients detection
-
-            if (
-    any(
-        unit in lower
-        for unit in [
-            "cup",
-            "tbsp",
-            "tsp",
-            "gram",
-            "kg",
-            "ml",
-            "oz",
-            "lb"
-        ]
-    )
-    and len(line.split()) < 12
-):
-
-    ingredients.append(line) replace(
-                        "-",
-                        ""
-                    ).strip()
-                )
+            if any(
+                word in lower
+                for word in skip_words
+            ):
+                continue
 
 
+            if len(line.split()) > 15:
+                continue
 
-            # Instructions detection
 
-            elif (
-
-                lower.startswith(
-                    (
-                        "step",
-                        "add",
-                        "mix",
-                        "cook",
-                        "heat",
-                        "pour",
-                        "serve",
-                        "rinse",
-                        "fry",
-                        "boil",
-                        "combine"
-                    )
-                )
-
+            if any(
+                unit in lower
+                for unit in [
+                    "cup",
+                    "tbsp",
+                    "tsp",
+                    "gram",
+                    "kg",
+                    "ml",
+                    "oz",
+                    "lb"
+                ]
             ):
 
-                instructions.append(
-                    line
-                )
+                ingredients.append(line)
+
+
+
+            if (
+                lower.startswith("add")
+                or lower.startswith("cook")
+                or lower.startswith("mix")
+                or lower.startswith("heat")
+                or lower.startswith("serve")
+                or lower.startswith("rinse")
+                or lower.startswith("fry")
+            ):
+
+                instructions.append(line)
 
 
 
@@ -181,27 +120,17 @@ def recipe_parser_agent(recipe):
         )
 
 
-
         return {
 
-            "Recipe":
-                title,
+            "Ingredients": ingredients[:30],
 
-            "URL":
-                url,
-
-            "Ingredients":
-                ingredients[:30],
-
-            "Instructions":
-                instructions[:30]
+            "Instructions": instructions[:20]
 
         }
 
 
 
     except Exception as e:
-
 
         print(
             "PARSER ERROR:",
@@ -211,16 +140,8 @@ def recipe_parser_agent(recipe):
 
         return {
 
-            "Recipe":
-                "error",
+            "Ingredients": [],
 
-            "URL":
-                "",
-
-            "Ingredients":
-                [],
-
-            "Instructions":
-                []
+            "Instructions": []
 
         }
