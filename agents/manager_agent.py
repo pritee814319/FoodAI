@@ -70,7 +70,10 @@ def manager_agent(food_name, people):
 
     first_recipe = final_recipes[0]
 
-
+print("FINAL INGREDIENTS SENT TO USDA:")
+for item in first_recipe["Ingredients"]:
+    print(item)
+    
     nutrition = ingredient_agent(
         first_recipe["Ingredients"]
     )
