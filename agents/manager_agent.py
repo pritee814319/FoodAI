@@ -28,31 +28,28 @@ def manager_agent(food_name, people):
 
     for recipe in recipes:
 
-    print("PROCESSING RECIPE:", recipe)
+        print("PROCESSING RECIPE:", recipe)
 
-    url = recipe.get(
-        "URL",
-        ""
-    )
+        url = recipe.get(
+            "URL",
+            ""
+        )
 
-    if not url:
-        continue
+        if not url:
+            continue
 
-    parsed = recipe_parser_agent(
-        url
-    )
+        parsed = recipe_parser_agent(
+            url
+        )
 
-    print(
-        "PARSER OUTPUT:",
-        parsed
-    )
-
-        print("PARSER OUTPUT:", parsed)
+        print(
+            "PARSER OUTPUT:",
+            parsed
+        )
 
         if parsed.get("Ingredients"):
 
             final_recipes.append(parsed)
-
 
     print(
         "FINAL RECIPES:",
