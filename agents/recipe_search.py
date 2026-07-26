@@ -71,10 +71,7 @@
 
         # keep only matching recipes
 
-        if all(
-            word in recipe_name
-            for word in food_words
-        ):
+        if recipe_name.startswith(food.lower()) or recipe_name == food.lower():
 
 
             seen.add(
