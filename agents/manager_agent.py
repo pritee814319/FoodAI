@@ -19,7 +19,7 @@ def divide_nutrition(total, people):
 
 
 
-def manager_agent(food, people):
+def manager_agent(food_name, people):
 
 
     print(
