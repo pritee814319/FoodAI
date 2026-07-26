@@ -34,9 +34,24 @@ def manager_agent(food_name, people):
     for recipe in recipes:
 
 
-        parsed = recipe_parser_agent(
-            recipe
-        )
+      for recipe in recipes:
+
+    print("RAW RECIPE:")
+    print(recipe)
+
+
+    parsed = recipe_parser_agent(
+        recipe
+    )
+
+
+    print("PARSED RECIPE:")
+    print(parsed)
+
+
+    if parsed.get("Ingredients"):
+
+        final_recipes.append(parsed)
 
 
         print("PARSED RECIPE:")
