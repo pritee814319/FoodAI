@@ -169,12 +169,16 @@ def recipe_search_agent(food):
 
     blocked = [
 
-        "youtube",
-        "pinterest",
-        "facebook",
-        "instagram"
+    "youtube",
+    "pinterest",
+    "facebook",
+    "instagram",
+    "/recipes/",
+    "/category/",
+    "/collections/",
+    "/search"
 
-    ]
+]
 
 
 
@@ -241,7 +245,7 @@ def recipe_search_agent(food):
         "food_info": food_info,
 
 
-        "recipes": final[:5],
+        "recipes": final[:10],
 
 
         "count": len(final)
