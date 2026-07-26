@@ -150,8 +150,7 @@ def recipe_search_agent(food):
 
 
 
-    for recipe in cleaned:
-
+        for recipe in cleaned:
 
         url = recipe.get(
             "URL",
@@ -159,72 +158,53 @@ def recipe_search_agent(food):
         ).lower()
 
 
-
         if any(
             word in url
             for word in blocked
         ):
-
             continue
 
 
-
         name = recipe.get(
-    "Recipe",
-    ""
-)
+            "Recipe",
+            ""
+        )
 
 
-url = recipe.get(
-    "URL",
-    ""
-)
+        if not name:
+
+            name = (
+                url.split("/")[-1]
+                .replace("-", " ")
+                .title()
+            )
 
 
-if not name:
-
-    # create recipe name from URL
-
-    name = (
-        url.split("/")[-1]
-        .replace("-", " ")
-        .title()
-    )
-
-
-if not name:
-
-    continue
-
+        if not name:
+            continue
 
 
         key = name.lower().strip()
 
 
-
         if key in seen:
-
             continue
 
 
+        if (
+            food.lower() in name.lower()
+            or food.lower() in url.lower()
+        ):
 
-        # better food matching
+            seen.add(
+                key
+            )
 
-        if food.lower() in name.lower() or food.lower() in url.lower():
+            recipe["Recipe"] = name
 
-    seen.add(
-        key
-    )
-
-    recipe["Recipe"] = name
-
-    final.append(
-        recipe
-    )
-
-
-
-        print(
+            final.append(
+                recipe
+            )        print(
         "TOTAL RECIPES:",
         len(final)
     )
