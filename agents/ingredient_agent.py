@@ -200,7 +200,9 @@ def ingredient_agent(ingredients):
                 ingredient
             )
 
-
+if len(ingredient.split()) > 8:
+    continue
+    
             result = search_usda_food(
                 ingredient
             )
