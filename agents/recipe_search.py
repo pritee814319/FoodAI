@@ -207,11 +207,14 @@ def recipe_search_agent(food):
 
 
 
-        name = recipe.get(
-            "Recipe",
-            "Unknown"
-        )
+       name = recipe.get(
+    "Recipe",
+    ""
+)
 
+
+if not name:
+    continue
 
         key = name.lower().strip()
 
