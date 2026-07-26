@@ -1,142 +1,236 @@
-import requests
 from bs4 import BeautifulSoup
+import requests
 
 
-def recipe_parser_agent(url):
+
+def recipe_parser_agent(recipe):
 
     try:
 
-        headers = {
-            "User-Agent":
-            "Mozilla/5.0"
-        }
+        # -----------------------------
+        # Get recipe information
+        # -----------------------------
 
-        page = requests.get(
-            url,
-            headers=headers,
-            timeout=10
-        )
+        if isinstance(recipe, dict):
 
-        soup = BeautifulSoup(
-            page.text,
-            "html.parser"
-        )
+            url = recipe.get(
+                "url",
+                ""
+            )
 
-        text = soup.get_text("\n")
+            title = recipe.get(
+                "title",
+                "Recipe"
+            )
 
-        ingredients = []
-        instructions = []
+            content = recipe.get(
+                "content",
+                ""
+            )
+
+        else:
+
+            url = recipe
+            title = "Recipe"
+            content = ""
+
+
+        text = content
+
+
+        # -----------------------------
+        # Try website extraction
+        # -----------------------------
+
+        if url:
+
+
+            try:
+
+                headers = {
+                    "User-Agent":
+                    "Mozilla/5.0"
+                }
+
+
+                page = requests.get(
+                    url,
+                    headers=headers,
+                    timeout=8
+                )
+
+
+                soup = BeautifulSoup(
+                    page.text,
+                    "html.parser"
+                )
+
+
+                website_text = soup.get_text(
+                    "\n"
+                )
+
+
+                if len(website_text) > len(text):
+
+                    text = website_text
+
+
+            except Exception:
+
+                pass
+
+
+
+        # -----------------------------
+        # Extract lines
+        # -----------------------------
+
 
         lines = [
+
             x.strip()
+
             for x in text.split("\n")
+
             if x.strip()
-        ]
-
-        skip_words = [
-
-            "share",
-
-            "facebook",
-
-            "instagram",
-
-            "twitter",
-
-            "comments",
-
-            "advertisement",
-
-            "newsletter",
-
-            "photo guide",
-
-            "more recipes",
-
-            "breakfast recipes",
-
-            "related recipes",
-
-            "table of contents",
-
-            "reader interactions",
-
-            "jump to recipe"
 
         ]
+
+
+
+        ingredients = []
+
+        instructions = []
+
+
 
         for line in lines:
 
+
             lower = line.lower()
 
-            if any(
-                word in lower
-                for word in skip_words
-            ):
-                continue
 
-            if len(line) > 150:
-                continue
+
+            # Ingredients detection
 
             if (
-                "cup" in lower
-                or "tbsp" in lower
-                or "tsp" in lower
-                or "gram" in lower
-                or "kg" in lower
-                or "oz" in lower
-                or "lb" in lower
-                or "ml" in lower
-                or "▢" in line
+
+                any(
+                    unit in lower
+
+                    for unit in [
+
+                        "cup",
+                        "tbsp",
+                        "tablespoon",
+                        "tsp",
+                        "teaspoon",
+                        "gram",
+                        "kg",
+                        "ml",
+                        "g ",
+                        "ounce",
+                        "oz"
+
+                    ]
+                )
+
+                or line.startswith("-")
+
             ):
 
-                ingredients.append(line)
+                ingredients.append(
+                    line.replace(
+                        "-",
+                        ""
+                    ).strip()
+                )
+
+
+
+            # Instructions detection
 
             elif (
 
-                lower.startswith("step")
-
-                or lower.startswith("add")
-
-                or lower.startswith("mix")
-
-                or lower.startswith("cook")
-
-                or lower.startswith("heat")
-
-                or lower.startswith("pour")
-
-                or lower.startswith("serve")
-
-                or lower.startswith("garnish")
-
-                or lower.startswith("rinse")
-
-                or lower.startswith("saute")
-
-                or lower.startswith("fry")
+                lower.startswith(
+                    (
+                        "step",
+                        "add",
+                        "mix",
+                        "cook",
+                        "heat",
+                        "pour",
+                        "serve",
+                        "rinse",
+                        "fry",
+                        "boil",
+                        "combine"
+                    )
+                )
 
             ):
 
-                instructions.append(line)
+                instructions.append(
+                    line
+                )
 
-        ingredients = list(dict.fromkeys(ingredients))
-        instructions = list(dict.fromkeys(instructions))
+
+
+        ingredients = list(
+            dict.fromkeys(
+                ingredients
+            )
+        )
+
+
+        instructions = list(
+            dict.fromkeys(
+                instructions
+            )
+        )
+
+
 
         return {
 
-            "Ingredients": ingredients[:25],
+            "Recipe":
+                title,
 
-            "Instructions": instructions[:20]
+            "URL":
+                url,
+
+            "Ingredients":
+                ingredients[:30],
+
+            "Instructions":
+                instructions[:30]
 
         }
 
-    except Exception:
+
+
+    except Exception as e:
+
+
+        print(
+            "PARSER ERROR:",
+            e
+        )
+
 
         return {
 
-            "Ingredients": [],
+            "Recipe":
+                "error",
 
-            "Instructions": []
+            "URL":
+                "",
+
+            "Ingredients":
+                [],
+
+            "Instructions":
+                []
 
         }
