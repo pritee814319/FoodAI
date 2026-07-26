@@ -5,8 +5,14 @@ from agents.food_understanding_agent import food_understanding_agent
 
 def normalize_recipe(item):
 
+    """
+    Convert any recipe format into dictionary
+    """
+
     if isinstance(item, dict):
+
         return item
+
 
     if isinstance(item, str):
 
@@ -16,6 +22,7 @@ def normalize_recipe(item):
             "Ingredients": [],
             "Instructions": ""
         }
+
 
     return None
 
@@ -31,7 +38,10 @@ def recipe_search_agent(food):
     recipes = []
 
 
+    # -----------------------------
     # Food understanding
+    # -----------------------------
+
     try:
 
         food_info = food_understanding_agent(food)
@@ -39,8 +49,11 @@ def recipe_search_agent(food):
     except Exception:
 
         food_info = {
+
             "standard_name": food,
+
             "search_terms": [food]
+
         }
 
 
@@ -58,13 +71,16 @@ def recipe_search_agent(food):
 
 
 
-    # MealDB
+    # -----------------------------
+    # MealDB recipes
+    # -----------------------------
 
     try:
 
         mealdb = recipe_agent(
             standard_name
         )
+
 
         if mealdb:
 
@@ -82,15 +98,19 @@ def recipe_search_agent(food):
 
 
 
+    # -----------------------------
     # Web recipes
+    # -----------------------------
 
     for term in search_terms:
+
 
         try:
 
             web = web_recipe_agent(
                 term
             )
+
 
             if web:
 
@@ -108,12 +128,15 @@ def recipe_search_agent(food):
 
 
 
+    # -----------------------------
     # Normalize
+    # -----------------------------
 
     cleaned = []
 
 
     for item in recipes:
+
 
         recipe = normalize_recipe(
             item
@@ -128,20 +151,23 @@ def recipe_search_agent(food):
 
 
 
-    # Filter
+    # -----------------------------
+    # Remove unwanted sources
+    # -----------------------------
 
-    blocked = [
+    blocked_words = [
 
         "youtube",
         "pinterest",
         "facebook",
         "instagram",
-        "/category/",
-        "/collections/",
-        "/search"
+        "category",
+        "collection",
+        "search",
+        "tag",
+        "author"
 
     ]
-
 
 
     final = []
@@ -150,19 +176,20 @@ def recipe_search_agent(food):
 
 
 
-        for recipe in cleaned:
+    # -----------------------------
+    # Keep only matching recipes
+    # -----------------------------
+
+    food_words = food.lower().split()
+
+
+    for recipe in cleaned:
+
 
         url = recipe.get(
             "URL",
             ""
-        ).lower()
-
-
-        if any(
-            word in url
-            for word in blocked
-        ):
-            continue
+        )
 
 
         name = recipe.get(
@@ -171,56 +198,120 @@ def recipe_search_agent(food):
         )
 
 
+        url_lower = url.lower()
+
+        name_lower = name.lower()
+
+
+
+        # Create name if missing
+
         if not name:
 
             name = (
+
                 url.split("/")[-1]
+
                 .replace("-", " ")
+
+                .replace("_", " ")
+
                 .title()
+
             )
 
+            name_lower = name.lower()
+
+
+
+        # Skip empty
 
         if not name:
+
             continue
 
 
-        key = name.lower().strip()
+
+        # Skip bad websites
+
+        if any(
+            word in url_lower
+            for word in blocked_words
+        ):
+
+            continue
+
+
+
+        # Must match food name
+
+        match = any(
+
+            word in name_lower
+            or word in url_lower
+
+            for word in food_words
+
+        )
+
+
+        if not match:
+
+            continue
+
+
+
+        key = name_lower.strip()
+
 
 
         if key in seen:
+
             continue
 
 
-        if (
-            food.lower() in name.lower()
-            or food.lower() in url.lower()
-        ):
 
-            seen.add(
-                key
-            )
+        seen.add(
+            key
+        )
 
-            recipe["Recipe"] = name
 
-            final.append(
-                recipe
-            )      
-            
-               print(
+        recipe["Recipe"] = name
+
+
+        final.append(
+            recipe
+        )
+
+
+
+        # limit
+
+        if len(final) >= 5:
+
+            break
+
+
+
+    print(
         "TOTAL RECIPES:",
         len(final)
     )
 
 
+
     return {
+
 
         "query": food,
 
+
         "food_info": food_info,
 
-        "recipes": final[:5],
+
+        "recipes": final,
+
 
         "count": len(final)
 
-    }
     }
