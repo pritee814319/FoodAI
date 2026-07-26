@@ -22,7 +22,7 @@
 
 
 
-    for recipe in cleaned:
+        for recipe in cleaned:
 
 
         url = recipe.get(
@@ -31,14 +31,12 @@
         ).lower()
 
 
-
         if any(
             b in url
             for b in blocked
         ):
 
             continue
-
 
 
         name = recipe.get(
@@ -52,9 +50,7 @@
             continue
 
 
-
         key = name.lower().strip()
-
 
 
         if key in seen:
@@ -62,16 +58,12 @@
             continue
 
 
-
         food_words = food.lower().split()
 
         recipe_name = name.lower()
 
 
-
-        # keep only matching recipes
-
-        if recipe_name.startswith(food.lower()) or recipe_name == food.lower():
+        if recipe_name.startswith(food.lower()):
 
 
             seen.add(
