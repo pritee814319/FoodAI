@@ -1,53 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-import re
-
-
-BAD_TEXT = [
-
-    "google",
-    "facebook",
-    "instagram",
-    "subscribe",
-    "newsletter",
-    "comments",
-    "review",
-    "author",
-    "jump to recipe",
-    "table of contents",
-    "privacy",
-    "advertisement",
-    "cookie",
-    "preferred source",
-    "cooking tips",
-    "cooking basics",
-    "more recipes"
-
-]
-
-
-def clean_line(text):
-
-    text = text.strip()
-
-    if len(text) < 3:
-        return False
-
-    lower = text.lower()
-
-    for bad in BAD_TEXT:
-        if bad in lower:
-            return False
-
-
-    # remove only numbers
-    if re.match(r"^[0-9\.\-\s]+$", text):
-        return False
-
-
-    return True
-
-
+import json
 
 
 def recipe_parser_agent(url):
@@ -55,10 +8,7 @@ def recipe_parser_agent(url):
     try:
 
         headers = {
-
-            "User-Agent":
-            "Mozilla/5.0"
-
+            "User-Agent": "Mozilla/5.0"
         }
 
 
@@ -75,128 +25,157 @@ def recipe_parser_agent(url):
         )
 
 
-        # remove unwanted html
-
-        for tag in soup(
-            [
-                "script",
-                "style",
-                "nav",
-                "footer",
-                "header"
-            ]
-        ):
-            tag.decompose()
-
-
-
-        text = soup.get_text("\n")
-
-
-        lines = [
-
-            x.strip()
-
-            for x in text.split("\n")
-
-            if clean_line(x)
-
-        ]
-
-
-
         ingredients = []
-
         instructions = []
 
 
+        # -------------------------
+        # Read recipe JSON-LD
+        # -------------------------
 
-        ingredient_words = [
-
-            "cup",
-            "cups",
-            "tbsp",
-            "tablespoon",
-            "tsp",
-            "teaspoon",
-            "kg",
-            "gram",
-            "grams",
-            "ml",
-            "clove",
-            "slice",
-            "chopped",
-            "powder"
-
-        ]
+        scripts = soup.find_all(
+            "script",
+            type="application/ld+json"
+        )
 
 
+        for script in scripts:
 
-        instruction_words = [
 
-            "add",
-            "mix",
-            "cook",
-            "heat",
-            "fry",
-            "saute",
-            "boil",
-            "serve",
-            "stir"
+            try:
 
-        ]
+                data = json.loads(
+                    script.string
+                )
+
+
+                if isinstance(data, list):
+
+                    items = data
+
+                else:
+
+                    items = [data]
 
 
 
-        for line in lines:
+                for item in items:
 
 
-            lower=line.lower()
-
-
-
-            # ingredients
-
-            if any(
-                word in lower
-                for word in ingredient_words
-            ):
-
-                if len(line) < 100:
-
-                    ingredients.append(line)
+                    if not isinstance(item, dict):
+                        continue
 
 
 
-            # instructions
+                    if item.get("@type") == "Recipe" or "Recipe" in str(item.get("@type")):
 
-            elif any(
-                lower.startswith(word)
-                for word in instruction_words
-            ):
 
-                if len(line) < 180:
+                        ingredients = item.get(
+                            "recipeIngredient",
+                            []
+                        )
 
-                    instructions.append(line)
 
+                        raw_steps = item.get(
+                            "recipeInstructions",
+                            []
+                        )
+
+
+                        for step in raw_steps:
+
+
+                            if isinstance(step, dict):
+
+                                instructions.append(
+                                    step.get(
+                                        "text",
+                                        ""
+                                    )
+                                )
+
+
+                            elif isinstance(step,str):
+
+                                instructions.append(step)
+
+
+
+            except:
+
+                continue
+
+
+
+        # -------------------------
+        # Clean ingredients
+        # -------------------------
+
+        clean_ing=[]
+
+
+        for item in ingredients:
+
+
+            if not isinstance(item,str):
+                continue
+
+
+            item=item.strip()
+
+
+            if len(item)<3:
+                continue
+
+
+            clean_ing.append(item)
+
+
+
+        ingredients = list(
+            dict.fromkeys(clean_ing)
+        )
+
+
+
+        # -------------------------
+        # Clean instructions
+        # -------------------------
+
+        clean_steps=[]
+
+
+        for step in instructions:
+
+
+            if not step:
+                continue
+
+
+            step=step.strip()
+
+
+            if len(step)<5:
+                continue
+
+
+            clean_steps.append(step)
+
+
+
+        instructions=list(
+            dict.fromkeys(clean_steps)
+        )
 
 
 
         return {
 
-            "URL":url,
+            "Ingredients": ingredients[:30],
 
-            "Ingredients":
+            "Instructions": instructions[:30],
 
-                list(dict.fromkeys(
-                    ingredients[:20]
-                )),
-
-            "Instructions":
-
-                list(dict.fromkeys(
-                    instructions[:15]
-                ))
+            "URL": url
 
         }
 
@@ -213,10 +192,10 @@ def recipe_parser_agent(url):
 
         return {
 
-            "URL":url,
+            "Ingredients": [],
 
-            "Ingredients":[],
+            "Instructions": [],
 
-            "Instructions":[]
+            "URL": url
 
         }
