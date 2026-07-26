@@ -3,12 +3,7 @@ import re
 from api.usda_client import search_usda_food
 
 
-# ---------------------------------------------------
-# Words that indicate recipe/article text
-# ---------------------------------------------------
-
 BAD_WORDS = [
-
     "recipe",
     "about",
     "photo",
@@ -19,34 +14,17 @@ BAD_WORDS = [
     "faq",
     "table",
     "contents",
-    "more",
-    "tips",
-    "variation",
     "published",
     "updated",
     "author",
     "subscribe",
-
-    "popular",
-    "traditional",
-    "method",
-    "process",
-    "dish",
     "cook",
     "serve",
-    "enjoy",
-    "learn",
-    "best",
-    "story",
-    "introduction",
-    "instruction"
-
+    "instruction",
+    "method",
+    "step"
 ]
 
-
-# ---------------------------------------------------
-# Remove bad recipe text
-# ---------------------------------------------------
 
 def clean_ingredients(items):
 
@@ -57,9 +35,7 @@ def clean_ingredients(items):
 
     for item in items:
 
-
         if not isinstance(item, str):
-
             continue
 
 
@@ -67,45 +43,37 @@ def clean_ingredients(items):
 
 
         if len(text) < 3:
-
             continue
 
 
         lower = text.lower()
 
 
-        # Remove article text
-
-        if any(
-            word in lower
-            for word in BAD_WORDS
-        ):
-
-            continue
-
-
-        if "http" in lower:
-
-            continue
-
-
-        # Remove very long sentences
-
+        # remove sentences
         if len(text.split()) > 12:
-
             continue
 
 
-        key = text.lower()
-
-
-        if key in seen:
-
+        if any(word in lower for word in BAD_WORDS):
             continue
 
 
-        seen.add(key)
+        # must contain measurement
+        measurement = re.search(
+            r"\b\d+(\.\d+)?\s?(cup|tbsp|tsp|g|kg|gram|ml|oz|lb|tablespoon|teaspoon)\b",
+            lower
+        )
 
+
+        if not measurement:
+            continue
+
+
+        if text.lower() in seen:
+            continue
+
+
+        seen.add(text.lower())
 
         cleaned.append(text)
 
@@ -115,152 +83,67 @@ def clean_ingredients(items):
 
 
 
-# ---------------------------------------------------
-# Convert recipe ingredient into food name
-# Example:
-# "2 cups poha" -> "poha"
-# "1 tbsp oil" -> "oil"
-# ---------------------------------------------------
-
-def normalize_ingredient(text):
 
 
-    text = text.lower()
-
-
-    # remove numbers
-
-    text = re.sub(
-        r"\d+[\d\/\.\s]*",
-        "",
-        text
-    )
-
-
-    units = [
-
-        "cups",
-        "cup",
-        "tablespoons",
-        "tablespoon",
-        "tbsp",
-        "teaspoons",
-        "teaspoon",
-        "tsp",
-        "grams",
-        "gram",
-        "kg",
-        "ml",
-        "oz",
-        "lb"
-
-    ]
-
-
-    for unit in units:
-
-        text = text.replace(
-            unit,
-            ""
-        )
-
-
-    # remove symbols
-
-    text = re.sub(
-        r"[^a-z\s]",
-        "",
-        text
-    )
-
-
-    return text.strip()
-
-
-
-# ---------------------------------------------------
-# Extract USDA nutrition
-# ---------------------------------------------------
-
-def extract_nutrition(usda_result):
+def extract_nutrition(data):
 
 
     nutrition = {
 
-        "Calories (kcal)": 0,
-
-        "Protein (g)": 0,
-
-        "Carbohydrates (g)": 0,
-
-        "Fat (g)": 0,
-
-        "Fiber (g)": 0,
-
-        "Sugar (g)": 0,
-
-        "Sodium (mg)": 0
+        "Calories (kcal)":0,
+        "Protein (g)":0,
+        "Carbohydrates (g)":0,
+        "Fat (g)":0,
+        "Fiber (g)":0,
+        "Sugar (g)":0,
+        "Sodium (mg)":0
 
     }
 
 
-
-    if not usda_result:
-
+    if not data:
         return nutrition
 
 
 
-    if "nutrition" not in usda_result:
-
-        return nutrition
-
-
-
-    data = usda_result["nutrition"]
+    usda = data.get(
+        "nutrition",
+        {}
+    )
 
 
 
-    for key, value in data.items():
+    for name,value in usda.items():
+
+        key=name.lower()
 
 
-        key_lower = key.lower()
-
-
-
-        if "energy" in key_lower:
-
+        if "energy" in key:
             nutrition["Calories (kcal)"] = value
 
 
-        elif "protein" in key_lower:
-
+        elif "protein" in key:
             nutrition["Protein (g)"] = value
 
 
-        elif "carbohydrate" in key_lower:
-
+        elif "carbohydrate" in key:
             nutrition["Carbohydrates (g)"] = value
 
 
-        elif "total lipid" in key_lower:
-
+        elif "lipid" in key or "fat" in key:
             nutrition["Fat (g)"] = value
 
 
-        elif "fiber" in key_lower:
-
+        elif "fiber" in key:
             nutrition["Fiber (g)"] = value
 
 
-        elif "sugars" in key_lower:
-
-            nutrition["Sugar (g)"] = value
-
-
-        elif "sodium" in key_lower:
-
+        elif "sodium" in key:
             nutrition["Sodium (mg)"] = value
+
+
+        elif "sugar" in key:
+            nutrition["Sugar (g)"] = value
 
 
 
@@ -268,9 +151,7 @@ def extract_nutrition(usda_result):
 
 
 
-# ---------------------------------------------------
-# Main Ingredient Agent
-# ---------------------------------------------------
+
 
 def ingredient_agent(ingredients):
 
@@ -292,42 +173,21 @@ def ingredient_agent(ingredients):
     )
 
 
-    print(
-        "\nFINAL INGREDIENTS SENT TO USDA:"
-    )
-
-
-    for item in ingredients:
-
-        print(
-            "-",
-            item
-        )
-
-
-
     total = {
 
-        "Calories (kcal)": 0,
-
-        "Protein (g)": 0,
-
-        "Carbohydrates (g)": 0,
-
-        "Fat (g)": 0,
-
-        "Fiber (g)": 0,
-
-        "Sugar (g)": 0,
-
-        "Sodium (mg)": 0
+        "Calories (kcal)":0,
+        "Protein (g)":0,
+        "Carbohydrates (g)":0,
+        "Fat (g)":0,
+        "Fiber (g)":0,
+        "Sugar (g)":0,
+        "Sodium (mg)":0
 
     }
 
 
 
-    searched = set()
-
+    used=[]
 
 
     for ingredient in ingredients:
@@ -335,40 +195,15 @@ def ingredient_agent(ingredients):
 
         try:
 
-
-            food_name = normalize_ingredient(
+            print(
+                "USDA SEARCH:",
                 ingredient
             )
 
 
-            if not food_name:
-
-                continue
-
-
-
-            if food_name in searched:
-
-                continue
-
-
-
-            searched.add(
-                food_name
-            )
-
-
-            print(
-                "USDA SEARCH:",
-                food_name
-            )
-
-
-
             result = search_usda_food(
-                food_name
+                ingredient
             )
-
 
 
             nutrition = extract_nutrition(
@@ -376,16 +211,17 @@ def ingredient_agent(ingredients):
             )
 
 
-
             for key in total:
 
+                total[key]+=nutrition[key]
 
-                total[key] += nutrition[key]
 
+            used.append(
+                ingredient
+            )
 
 
         except Exception as e:
-
 
             print(
                 "Nutrition error:",
@@ -397,8 +233,7 @@ def ingredient_agent(ingredients):
 
     for key in total:
 
-
-        total[key] = round(
+        total[key]=round(
             total[key],
             2
         )
@@ -407,14 +242,8 @@ def ingredient_agent(ingredients):
 
     return {
 
+        "Ingredients Used":used,
 
-        "Ingredients Used":
-
-        ingredients,
-
-
-        "Total Nutrition":
-
-        total
+        "Total Nutrition":total
 
     }
