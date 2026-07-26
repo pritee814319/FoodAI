@@ -219,13 +219,25 @@ def recipe_search_agent(food):
 
         if key not in seen:
 
-            seen.add(
-                key
-            )
+    food_words = food.lower().split()
 
-            final.append(
-                recipe
-            )
+    recipe_name = name.lower()
+
+
+    # keep only recipes matching food name
+
+    if all(
+        word in recipe_name
+        for word in food_words
+    ):
+
+        seen.add(
+            key
+        )
+
+        final.append(
+            recipe
+        )
 
 
 
