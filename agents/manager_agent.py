@@ -9,10 +9,9 @@ def divide_nutrition(total, people):
         return {}
 
     return {
-        k: round(v / people, 2)
-        for k, v in total.items()
+        key: round(value / people, 2)
+        for key, value in total.items()
     }
-
 
 
 def manager_agent(food_name, people):
@@ -20,11 +19,9 @@ def manager_agent(food_name, people):
     print("MANAGER START:", food_name)
 
 
-    # Search recipes
     search_result = recipe_search_agent(
         food_name
     )
-
 
     print("SEARCH RESULT:")
     print(search_result)
@@ -35,7 +32,6 @@ def manager_agent(food_name, people):
         []
     )
 
-
     print("RECIPES FOUND:")
     print(recipes)
 
@@ -45,11 +41,9 @@ def manager_agent(food_name, people):
 
     for recipe in recipes:
 
-
         parsed = recipe_parser_agent(
             recipe
         )
-
 
         print("PARSED RECIPE:")
         print(parsed)
@@ -71,7 +65,6 @@ def manager_agent(food_name, people):
                 "Nutrition Per Person": {}
             }
         }
-
 
 
     first_recipe = final_recipes[0]
