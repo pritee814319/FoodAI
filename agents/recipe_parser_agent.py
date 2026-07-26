@@ -1,25 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
-import re
 
 
-def recipe_parser_agent(recipe):
+def recipe_parser_agent(url):
 
     try:
-
-        # If Tavily sends dictionary
-        if isinstance(recipe, dict):
-            url = recipe.get("URL", "")
-        else:
-            url = recipe
-
-
-        if not url.startswith("http"):
-            return {
-                "Ingredients": [],
-                "Instructions": []
-            }
-
 
         headers = {
             "User-Agent": "Mozilla/5.0"
@@ -39,35 +24,64 @@ def recipe_parser_agent(recipe):
         )
 
 
+        # Remove unwanted page sections
+
+        for tag in soup(
+            [
+                "script",
+                "style",
+                "nav",
+                "footer",
+                "header",
+                "aside"
+            ]
+        ):
+            tag.decompose()
+
+
+
         text = soup.get_text("\n")
 
 
         lines = [
-            x.strip()
-            for x in text.split("\n")
-            if x.strip()
+            line.strip()
+            for line in text.split("\n")
+            if line.strip()
         ]
+
 
 
         ingredients = []
         instructions = []
 
 
-        # words we don't want
-        bad = [
-            "recipe",
-            "author",
+
+        # Words to ignore
+
+        ignore = [
+
             "share",
             "facebook",
             "instagram",
+            "twitter",
             "subscribe",
             "newsletter",
-            "jump to",
             "comments",
-            "copyright",
+            "author",
+            "jump to recipe",
+            "print recipe",
+            "save recipe",
             "privacy",
-            "advertisement"
+            "cookie",
+            "advertisement",
+            "cooking tips",
+            "cooking basics",
+            "related recipes",
+            "more recipes",
+            "you may also like"
+
         ]
+
 
 
         for line in lines:
@@ -76,70 +90,122 @@ def recipe_parser_agent(recipe):
             lower = line.lower()
 
 
+
             if any(
-                b in lower
-                for b in bad
+                word in lower
+                for word in ignore
             ):
                 continue
 
 
-            # ingredient detection
-            if re.search(
-                r"\d+\s*(cup|cups|tbsp|tablespoon|tsp|teaspoon|g|kg|ml|gram|oz|lb)",
-                lower
+
+            # Ignore headings
+
+            if len(line) < 5:
+                continue
+
+
+
+            if len(line) > 180:
+                continue
+
+
+
+            # Ingredient detection
+
+            ingredient_words = [
+
+                "cup",
+                "cups",
+                "tbsp",
+                "tablespoon",
+                "tablespoons",
+                "tsp",
+                "teaspoon",
+                "teaspoons",
+                "gram",
+                "grams",
+                "kg",
+                "ml",
+                "clove",
+                "piece",
+                "pieces",
+                "inch",
+                "½",
+                "¼",
+                "¾"
+
+            ]
+
+
+
+            if any(
+                word in lower
+                for word in ingredient_words
             ):
 
-                if len(line) < 120:
-                    ingredients.append(line)
+                ingredients.append(line)
+
+                continue
 
 
 
-            # instruction detection
 
-            elif any(
-                lower.startswith(x)
-                for x in [
-                    "add",
-                    "mix",
-                    "cook",
-                    "heat",
-                    "fry",
-                    "boil",
-                    "rinse",
-                    "marinate",
-                    "serve"
-                ]
+            # Instruction detection
+
+            action_words = [
+
+                "add ",
+                "mix ",
+                "cook ",
+                "heat ",
+                "stir ",
+                "fry ",
+                "saute",
+                "sauté",
+                "boil ",
+                "wash ",
+                "rinse ",
+                "drain ",
+                "serve ",
+                "cover ",
+                "remove ",
+                "place "
+
+            ]
+
+
+
+            if lower.startswith(
+                tuple(action_words)
             ):
 
                 instructions.append(line)
 
 
 
-        ingredients = list(
-            dict.fromkeys(ingredients)
-        )
-
-
-        instructions = list(
-            dict.fromkeys(instructions)
-        )
-
-
         return {
 
-            "Ingredients": ingredients[:30],
 
-            "Instructions": instructions[:20]
+            "Ingredients":
+            list(dict.fromkeys(ingredients))[:30],
+
+
+            "Instructions":
+            list(dict.fromkeys(instructions))[:25]
 
         }
 
 
+
     except Exception as e:
 
+
         print(
-            "PARSER ERROR:",
+            "Parser error:",
             e
         )
+
 
         return {
 
