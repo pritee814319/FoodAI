@@ -1,50 +1,117 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
 
 
-REMOVE_WORDS = [
+BAD_TEXT = [
 
-    "share",
-    "facebook",
-    "instagram",
-    "twitter",
-    "comments",
-    "advertisement",
-    "newsletter",
-    "related recipes",
-    "more recipes",
-    "jump to recipe",
-    "author",
+    "tip",
+    "tips",
+    "note",
+    "variation",
+    "optional",
     "subscribe",
+    "newsletter",
+    "author",
+    "comment",
+    "google",
     "privacy",
     "cookie",
-    "cooking basics",
-    "tips",
-    "variation"
+    "cookbook",
+    "additional info",
+    "nutrition",
+    "equipment",
+    "review",
+    "kids loved",
+    "delicious",
+    "preferred source"
 
 ]
 
 
 
-INGREDIENT_MARKERS = [
+MEASURE_WORDS = [
 
     "cup",
     "cups",
     "tbsp",
     "tablespoon",
+    "tablespoons",
     "tsp",
     "teaspoon",
+    "teaspoons",
     "gram",
+    "grams",
     "kg",
     "ml",
     "oz",
-    "lb",
-    "½",
-    "¼",
-    "¾"
+    "lb"
 
 ]
+
+
+
+def clean_line(line):
+
+    line = line.strip()
+
+    line = re.sub(
+        r"\s+",
+        " ",
+        line
+    )
+
+    return line
+
+
+
+def is_ingredient(line):
+
+    lower = line.lower()
+
+
+    # remove bad text
+
+    for word in BAD_TEXT:
+
+        if word in lower:
+
+            return False
+
+
+
+    # remove long paragraphs
+
+    if len(line) > 90:
+
+        return False
+
+
+
+    # ingredient usually starts with quantity
+
+    if re.match(
+        r"^[\d¼½¾⅓⅔]",
+        line
+    ):
+
+        return True
+
+
+
+    # contains measurement
+
+    for word in MEASURE_WORDS:
+
+        if word in lower:
+
+            return True
+
+
+
+    return False
+
 
 
 
@@ -52,23 +119,61 @@ def recipe_parser_agent(url):
 
     try:
 
+
         headers = {
+
             "User-Agent":
+
             "Mozilla/5.0"
+
         }
 
 
-        response = requests.get(
+
+        page = requests.get(
+
             url,
+
             headers=headers,
+
             timeout=10
+
         )
+
 
 
         soup = BeautifulSoup(
-            response.text,
+
+            page.text,
+
             "html.parser"
+
         )
+
+
+
+        # Remove unwanted HTML
+
+        for tag in soup(
+
+            [
+
+                "script",
+
+                "style",
+
+                "nav",
+
+                "footer",
+
+                "header"
+
+            ]
+
+        ):
+
+            tag.decompose()
+
 
 
         text = soup.get_text(
@@ -76,9 +181,10 @@ def recipe_parser_agent(url):
         )
 
 
+
         lines = [
 
-            x.strip()
+            clean_line(x)
 
             for x in text.split("\n")
 
@@ -88,74 +194,65 @@ def recipe_parser_agent(url):
 
 
 
-        ingredients = []
+        ingredients=[]
 
-        instructions = []
+        instructions=[]
 
 
 
         for line in lines:
 
 
-            lower = line.lower()
-
-
-
-            if any(
-                word in lower
-                for word in REMOVE_WORDS
-            ):
-
-                continue
-
-
-
-            if len(line) > 120:
-
-                continue
-
-
-
-            # Ingredients
-
-            if any(
-                marker in lower
-                for marker in INGREDIENT_MARKERS
-            ):
+            if is_ingredient(line):
 
                 ingredients.append(line)
 
 
 
-            # Instructions
+            else:
 
-            elif (
 
-                lower.startswith("add")
-                or lower.startswith("mix")
-                or lower.startswith("cook")
-                or lower.startswith("heat")
-                or lower.startswith("serve")
-                or lower.startswith("stir")
-                or lower.startswith("saute")
-                or lower.startswith("fry")
+                lower=line.lower()
 
-            ):
 
-                instructions.append(line)
+                if (
+
+                    lower.startswith("add")
+
+                    or lower.startswith("cook")
+
+                    or lower.startswith("heat")
+
+                    or lower.startswith("mix")
+
+                    or lower.startswith("stir")
+
+                    or lower.startswith("serve")
+
+                    or lower.startswith("fry")
+
+                    or lower.startswith("saute")
+
+                ):
+
+                    if len(line)<120:
+
+                        instructions.append(line)
 
 
 
         return {
 
+
             "Ingredients":
 
-            list(dict.fromkeys(ingredients))[:30],
+            list(dict.fromkeys(ingredients))[:20],
+
 
 
             "Instructions":
 
-            list(dict.fromkeys(instructions))[:20]
+            list(dict.fromkeys(instructions))[:15]
 
         }
 
