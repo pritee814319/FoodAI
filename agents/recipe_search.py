@@ -170,15 +170,31 @@ def recipe_search_agent(food):
 
 
         name = recipe.get(
-            "Recipe",
-            ""
-        )
+    "Recipe",
+    ""
+)
 
 
+url = recipe.get(
+    "URL",
+    ""
+)
 
-        if not name:
 
-            continue
+if not name:
+
+    # create recipe name from URL
+
+    name = (
+        url.split("/")[-1]
+        .replace("-", " ")
+        .title()
+    )
+
+
+if not name:
+
+    continue
 
 
 
@@ -194,16 +210,17 @@ def recipe_search_agent(food):
 
         # better food matching
 
-        if food.lower() in name.lower():
+        if food.lower() in name.lower() or food.lower() in url.lower():
 
-            seen.add(
-                key
-            )
+    seen.add(
+        key
+    )
 
+    recipe["Recipe"] = name
 
-            final.append(
-                recipe
-            )
+    final.append(
+        recipe
+    )
 
 
 
