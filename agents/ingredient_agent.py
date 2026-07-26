@@ -1,20 +1,33 @@
 from api.usda_client import search_usda_food
+import re
 
 
 BAD_WORDS = [
+
     "recipe",
-    "about",
+    "step",
+    "add",
+    "cook",
+    "heat",
+    "mix",
+    "serve",
+    "garnish",
+    "stir",
+    "saute",
+    "sauté",
+    "instructions",
+    "method",
+    "time",
+    "minutes",
+    "optional",
+    "note",
+    "tip",
     "photo",
     "guide",
-    "share",
-    "comment",
-    "review",
     "author",
     "subscribe",
-    "published",
-    "updated",
-    "instagram",
-    "facebook"
+    "comments"
+
 ]
 
 
@@ -23,85 +36,129 @@ def clean_ingredients(items):
     cleaned = []
     seen = set()
 
+
     for item in items:
 
         if not isinstance(item, str):
             continue
 
+
         text = item.strip()
 
-        if len(text) < 3:
+
+        if len(text) < 5:
             continue
+
 
         lower = text.lower()
 
-        if any(word in lower for word in BAD_WORDS):
+
+        # remove instructions
+        if any(
+            lower.startswith(word)
+            for word in BAD_WORDS
+        ):
             continue
 
-        if "http" in lower:
+
+        # remove sentences
+        if len(text.split()) > 12:
             continue
 
-        if text.lower() in seen:
+
+        # remove pure measurements
+        if re.match(
+            r"^[0-9\s¼½¾/.-]+$",
+            text
+        ):
             continue
 
-        seen.add(text.lower())
+
+        # remove useless words
+        if lower in [
+            "cup",
+            "cups",
+            "tbsp",
+            "tablespoon",
+            "tablespoons",
+            "tsp",
+            "teaspoon",
+            "teaspoons",
+            "gram",
+            "grams"
+        ]:
+            continue
+
+
+        # remove duplicate
+        if lower in seen:
+            continue
+
+
+        seen.add(lower)
 
         cleaned.append(text)
 
 
-    return cleaned
+
+    return cleaned[:20]
 
 
 
-def extract_nutrition(usda_result):
+
+
+def extract_nutrition(result):
+
 
     nutrition = {
 
-        "Calories (kcal)": 0,
-        "Protein (g)": 0,
-        "Carbohydrates (g)": 0,
-        "Fat (g)": 0,
-        "Fiber (g)": 0,
-        "Sugar (g)": 0,
-        "Sodium (mg)": 0
+        "Calories (kcal)":0,
+        "Protein (g)":0,
+        "Carbohydrates (g)":0,
+        "Fat (g)":0,
+        "Fiber (g)":0,
+        "Sugar (g)":0,
+        "Sodium (mg)":0
 
     }
 
 
-    if not usda_result:
+    if not result:
         return nutrition
 
 
-    data = usda_result.get(
+    data = result.get(
         "nutrition",
         {}
     )
 
 
-    for key, value in data.items():
+    for key,value in data.items():
 
-        name = key.lower()
+        k = key.lower()
 
 
-        if "energy" in name:
+        if "energy" in k:
             nutrition["Calories (kcal)"] = value
 
-        elif "protein" in name:
+
+        elif "protein" in k:
             nutrition["Protein (g)"] = value
 
-        elif "carbohydrate" in name:
+
+        elif "carbohydrate" in k:
             nutrition["Carbohydrates (g)"] = value
 
-        elif "total lipid" in name:
+
+        elif "total lipid" in k:
             nutrition["Fat (g)"] = value
 
-        elif "fiber" in name:
+
+        elif "fiber" in k:
             nutrition["Fiber (g)"] = value
 
-        elif "sugar" in name:
-            nutrition["Sugar (g)"] = value
 
-        elif "sodium" in name:
+        elif "sodium" in k:
             nutrition["Sodium (mg)"] = value
 
 
@@ -109,11 +166,13 @@ def extract_nutrition(usda_result):
 
 
 
+
+
 def ingredient_agent(ingredients):
 
 
     print(
-        "RAW INGREDIENT COUNT:",
+        "RAW INGREDIENTS:",
         len(ingredients)
     )
 
@@ -124,33 +183,36 @@ def ingredient_agent(ingredients):
 
 
     print(
-        "CLEAN INGREDIENT COUNT:",
-        len(ingredients)
+        "CLEAN INGREDIENTS:",
+        ingredients
     )
+
 
 
     total = {
 
-        "Calories (kcal)": 0,
-        "Protein (g)": 0,
-        "Carbohydrates (g)": 0,
-        "Fat (g)": 0,
-        "Fiber (g)": 0,
-        "Sugar (g)": 0,
-        "Sodium (mg)": 0
+        "Calories (kcal)":0,
+        "Protein (g)":0,
+        "Carbohydrates (g)":0,
+        "Fat (g)":0,
+        "Fiber (g)":0,
+        "Sugar (g)":0,
+        "Sodium (mg)":0
 
     }
 
 
 
+    used=[]
+
+
     for ingredient in ingredients:
 
-if len(ingredient.split()) > 12:
-    continue
+
         try:
 
             print(
-                "USDA SEARCH:",
+                "USDA:",
                 ingredient
             )
 
@@ -165,9 +227,20 @@ if len(ingredient.split()) > 12:
             )
 
 
+            # ignore failed USDA matches
+            if nutrition["Calories (kcal)"] == 0:
+                continue
+
+
+            used.append(
+                ingredient
+            )
+
+
             for key in total:
 
                 total[key] += nutrition[key]
+
 
 
         except Exception as e:
@@ -188,9 +261,10 @@ if len(ingredient.split()) > 12:
         )
 
 
+
     return {
 
-        "Ingredients Used": ingredients,
+        "Ingredients Used": used,
 
         "Total Nutrition": total
 
