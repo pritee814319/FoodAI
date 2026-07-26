@@ -1,5 +1,3 @@
-import re
-
 from api.usda_client import search_usda_food
 
 
@@ -11,145 +9,103 @@ BAD_WORDS = [
     "share",
     "comment",
     "review",
-    "faq",
-    "table",
-    "contents",
-    "published",
-    "updated",
     "author",
     "subscribe",
-    "cook",
-    "serve",
-    "instruction",
-    "method",
-    "step"
+    "published",
+    "updated",
+    "instagram",
+    "facebook"
 ]
 
 
 def clean_ingredients(items):
 
     cleaned = []
-
     seen = set()
-
 
     for item in items:
 
         if not isinstance(item, str):
             continue
 
-
         text = item.strip()
-
 
         if len(text) < 3:
             continue
 
-
         lower = text.lower()
-
-
-        # remove sentences
-        if len(text.split()) > 12:
-            continue
-
 
         if any(word in lower for word in BAD_WORDS):
             continue
 
-
-        # must contain measurement
-        measurement = re.search(
-            r"\b\d+(\.\d+)?\s?(cup|tbsp|tsp|g|kg|gram|ml|oz|lb|tablespoon|teaspoon)\b",
-            lower
-        )
-
-
-        if not measurement:
+        if "http" in lower:
             continue
-
 
         if text.lower() in seen:
             continue
-
 
         seen.add(text.lower())
 
         cleaned.append(text)
 
 
-
     return cleaned
 
 
 
-
-
-def extract_nutrition(data):
-
+def extract_nutrition(usda_result):
 
     nutrition = {
 
-        "Calories (kcal)":0,
-        "Protein (g)":0,
-        "Carbohydrates (g)":0,
-        "Fat (g)":0,
-        "Fiber (g)":0,
-        "Sugar (g)":0,
-        "Sodium (mg)":0
+        "Calories (kcal)": 0,
+        "Protein (g)": 0,
+        "Carbohydrates (g)": 0,
+        "Fat (g)": 0,
+        "Fiber (g)": 0,
+        "Sugar (g)": 0,
+        "Sodium (mg)": 0
 
     }
 
 
-    if not data:
+    if not usda_result:
         return nutrition
 
 
-
-    usda = data.get(
+    data = usda_result.get(
         "nutrition",
         {}
     )
 
 
+    for key, value in data.items():
 
-    for name,value in usda.items():
-
-        key=name.lower()
+        name = key.lower()
 
 
-        if "energy" in key:
+        if "energy" in name:
             nutrition["Calories (kcal)"] = value
 
-
-        elif "protein" in key:
+        elif "protein" in name:
             nutrition["Protein (g)"] = value
 
-
-        elif "carbohydrate" in key:
+        elif "carbohydrate" in name:
             nutrition["Carbohydrates (g)"] = value
 
-
-        elif "lipid" in key or "fat" in key:
+        elif "total lipid" in name:
             nutrition["Fat (g)"] = value
 
-
-        elif "fiber" in key:
+        elif "fiber" in name:
             nutrition["Fiber (g)"] = value
 
+        elif "sugar" in name:
+            nutrition["Sugar (g)"] = value
 
-        elif "sodium" in key:
+        elif "sodium" in name:
             nutrition["Sodium (mg)"] = value
 
 
-        elif "sugar" in key:
-            nutrition["Sugar (g)"] = value
-
-
-
     return nutrition
-
-
 
 
 
@@ -175,19 +131,16 @@ def ingredient_agent(ingredients):
 
     total = {
 
-        "Calories (kcal)":0,
-        "Protein (g)":0,
-        "Carbohydrates (g)":0,
-        "Fat (g)":0,
-        "Fiber (g)":0,
-        "Sugar (g)":0,
-        "Sodium (mg)":0
+        "Calories (kcal)": 0,
+        "Protein (g)": 0,
+        "Carbohydrates (g)": 0,
+        "Fat (g)": 0,
+        "Fiber (g)": 0,
+        "Sugar (g)": 0,
+        "Sodium (mg)": 0
 
     }
 
-
-
-    used=[]
 
 
     for ingredient in ingredients:
@@ -200,9 +153,7 @@ def ingredient_agent(ingredients):
                 ingredient
             )
 
-if len(ingredient.split()) > 8:
-    continue
-    
+
             result = search_usda_food(
                 ingredient
             )
@@ -215,12 +166,7 @@ if len(ingredient.split()) > 8:
 
             for key in total:
 
-                total[key]+=nutrition[key]
-
-
-            used.append(
-                ingredient
-            )
+                total[key] += nutrition[key]
 
 
         except Exception as e:
@@ -235,17 +181,16 @@ if len(ingredient.split()) > 8:
 
     for key in total:
 
-        total[key]=round(
+        total[key] = round(
             total[key],
             2
         )
 
 
-
     return {
 
-        "Ingredients Used":used,
+        "Ingredients Used": ingredients,
 
-        "Total Nutrition":total
+        "Total Nutrition": total
 
     }
