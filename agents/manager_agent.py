@@ -47,15 +47,9 @@ def manager_agent(food_name, people):
         parsed = recipe_parser_agent(
             recipe
         )
+print("PARSER OUTPUT:", parsed)
 
-
-        print(
-            "PARSED:",
-            parsed
-        )
-
-
-        if parsed.get("Ingredients"):
+               if parsed.get("Ingredients"):
 
             final_recipes.append(
                 parsed
