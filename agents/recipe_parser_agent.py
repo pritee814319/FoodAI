@@ -1,12 +1,20 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
 
-def recipe_parser_agent(url):
+def recipe_parser_agent(recipe):
 
     try:
 
-        if not url:
+        # If Tavily sends dictionary
+        if isinstance(recipe, dict):
+            url = recipe.get("URL", "")
+        else:
+            url = recipe
+
+
+        if not url.startswith("http"):
             return {
                 "Ingredients": [],
                 "Instructions": []
@@ -35,9 +43,9 @@ def recipe_parser_agent(url):
 
 
         lines = [
-            line.strip()
-            for line in text.split("\n")
-            if line.strip()
+            x.strip()
+            for x in text.split("\n")
+            if x.strip()
         ]
 
 
@@ -45,61 +53,62 @@ def recipe_parser_agent(url):
         instructions = []
 
 
-        skip_words = [
+        # words we don't want
+        bad = [
+            "recipe",
+            "author",
             "share",
             "facebook",
             "instagram",
-            "twitter",
+            "subscribe",
             "newsletter",
-            "advertisement",
-            "jump to recipe",
-            "related recipes",
-            "comments"
+            "jump to",
+            "comments",
+            "copyright",
+            "privacy",
+            "advertisement"
         ]
 
 
         for line in lines:
 
+
             lower = line.lower()
 
 
             if any(
-                word in lower
-                for word in skip_words
+                b in lower
+                for b in bad
             ):
                 continue
 
 
-            if len(line.split()) > 15:
-                continue
+            # ingredient detection
+            if re.search(
+                r"\d+\s*(cup|cups|tbsp|tablespoon|tsp|teaspoon|g|kg|ml|gram|oz|lb)",
+                lower
+            ):
+
+                if len(line) < 120:
+                    ingredients.append(line)
 
 
-            if any(
-                unit in lower
-                for unit in [
-                    "cup",
-                    "tbsp",
-                    "tsp",
-                    "gram",
-                    "kg",
-                    "ml",
-                    "oz",
-                    "lb"
+
+            # instruction detection
+
+            elif any(
+                lower.startswith(x)
+                for x in [
+                    "add",
+                    "mix",
+                    "cook",
+                    "heat",
+                    "fry",
+                    "boil",
+                    "rinse",
+                    "marinate",
+                    "serve"
                 ]
-            ):
-
-                ingredients.append(line)
-
-
-
-            if (
-                lower.startswith("add")
-                or lower.startswith("cook")
-                or lower.startswith("mix")
-                or lower.startswith("heat")
-                or lower.startswith("serve")
-                or lower.startswith("rinse")
-                or lower.startswith("fry")
             ):
 
                 instructions.append(line)
@@ -107,16 +116,12 @@ def recipe_parser_agent(url):
 
 
         ingredients = list(
-            dict.fromkeys(
-                ingredients
-            )
+            dict.fromkeys(ingredients)
         )
 
 
         instructions = list(
-            dict.fromkeys(
-                instructions
-            )
+            dict.fromkeys(instructions)
         )
 
 
@@ -129,14 +134,12 @@ def recipe_parser_agent(url):
         }
 
 
-
     except Exception as e:
 
         print(
             "PARSER ERROR:",
             e
         )
-
 
         return {
 
