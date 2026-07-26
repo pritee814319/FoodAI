@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
 
 def recipe_parser_agent(url):
@@ -9,7 +10,6 @@ def recipe_parser_agent(url):
         headers = {
             "User-Agent": "Mozilla/5.0"
         }
-
 
         response = requests.get(
             url,
@@ -24,175 +24,129 @@ def recipe_parser_agent(url):
         )
 
 
-        # Remove unwanted page sections
-
-        for tag in soup(
-            [
-                "script",
-                "style",
-                "nav",
-                "footer",
-                "header",
-                "aside"
-            ]
-        ):
-            tag.decompose()
-
-
-
-        text = soup.get_text("\n")
-
-
-        lines = [
-            line.strip()
-            for line in text.split("\n")
-            if line.strip()
-        ]
-
-
-
         ingredients = []
         instructions = []
+        image = ""
+
+
+        # -------------------------
+        # Extract image
+        # -------------------------
+
+        img = soup.find(
+            "meta",
+            property="og:image"
+        )
+
+        if img:
+            image = img.get("content","")
 
 
 
-        # Words to ignore
+        # -------------------------
+        # Extract Recipe JSON
+        # -------------------------
 
-        ignore = [
+        scripts = soup.find_all(
+            "script",
+            type="application/ld+json"
+        )
 
-            "share",
-            "facebook",
-            "instagram",
-            "twitter",
-            "subscribe",
-            "newsletter",
-            "comments",
-            "author",
-            "jump to recipe",
-            "print recipe",
-            "save recipe",
-            "privacy",
-            "cookie",
-            "advertisement",
-            "cooking tips",
-            "cooking basics",
-            "related recipes",
-            "more recipes",
-            "you may also like"
 
+        for script in scripts:
+
+
+            try:
+
+                import json
+
+                data = json.loads(
+                    script.string
+                )
+
+
+                if isinstance(data,list):
+
+                    items=data
+
+                else:
+
+                    items=[data]
+
+
+                for item in items:
+
+
+                    if item.get("@type")=="Recipe":
+
+
+                        ingredients = item.get(
+                            "recipeIngredient",
+                            []
+                        )
+
+
+                        steps=item.get(
+                            "recipeInstructions",
+                            []
+                        )
+
+
+                        for step in steps:
+
+
+                            if isinstance(step,dict):
+
+                                instructions.append(
+                                    step.get(
+                                        "text",
+                                        ""
+                                    )
+                                )
+
+                            else:
+
+                                instructions.append(
+                                    step
+                                )
+
+
+            except:
+
+                pass
+
+
+
+        # -------------------------
+        # Clean
+        # -------------------------
+
+
+        ingredients=[
+            x.strip()
+            for x in ingredients
+            if len(x.strip())>2
         ]
 
 
-
-        for line in lines:
-
-
-            lower = line.lower()
-
-
-
-            if any(
-                word in lower
-                for word in ignore
-            ):
-                continue
-
-
-
-            # Ignore headings
-
-            if len(line) < 5:
-                continue
-
-
-
-            if len(line) > 180:
-                continue
-
-
-
-            # Ingredient detection
-
-            ingredient_words = [
-
-                "cup",
-                "cups",
-                "tbsp",
-                "tablespoon",
-                "tablespoons",
-                "tsp",
-                "teaspoon",
-                "teaspoons",
-                "gram",
-                "grams",
-                "kg",
-                "ml",
-                "clove",
-                "piece",
-                "pieces",
-                "inch",
-                "½",
-                "¼",
-                "¾"
-
-            ]
-
-
-
-            if any(
-                word in lower
-                for word in ingredient_words
-            ):
-
-                ingredients.append(line)
-
-                continue
-
-
-
-
-            # Instruction detection
-
-            action_words = [
-
-                "add ",
-                "mix ",
-                "cook ",
-                "heat ",
-                "stir ",
-                "fry ",
-                "saute",
-                "sauté",
-                "boil ",
-                "wash ",
-                "rinse ",
-                "drain ",
-                "serve ",
-                "cover ",
-                "remove ",
-                "place "
-
-            ]
-
-
-
-            if lower.startswith(
-                tuple(action_words)
-            ):
-
-                instructions.append(line)
+        instructions=[
+            x.strip()
+            for x in instructions
+            if len(x.strip())>5
+        ]
 
 
 
         return {
 
 
-            "Ingredients":
-            list(dict.fromkeys(ingredients))[:30],
+            "URL": url,
 
+            "Image": image,
 
-            "Instructions":
-            list(dict.fromkeys(instructions))[:25]
+            "Ingredients": ingredients,
+
+            "Instructions": instructions[:15]
 
         }
 
@@ -202,15 +156,19 @@ def recipe_parser_agent(url):
 
 
         print(
-            "Parser error:",
+            "Parser Error:",
             e
         )
 
 
         return {
 
-            "Ingredients": [],
+            "URL":url,
 
-            "Instructions": []
+            "Image":"",
+
+            "Ingredients":[],
+
+            "Instructions":[]
 
         }
