@@ -10,10 +10,10 @@ def normalize_recipe(item):
 
     if isinstance(item, str):
         return {
-            "Recipe": item,
-            "URL": "",
+            "Recipe": "",
+            "URL": item,
             "Ingredients": [],
-            "Instructions": ""
+            "Instructions": []
         }
 
     return None
@@ -62,13 +62,13 @@ def recipe_search_agent(food):
 
     try:
 
-        mealdb = recipe_agent(
+        result = recipe_agent(
             standard_name
         )
 
-        if mealdb:
+        if result:
 
-            recipes.extend(mealdb)
+            recipes.extend(result)
 
 
     except Exception as e:
@@ -86,11 +86,13 @@ def recipe_search_agent(food):
 
         try:
 
-            web = web_recipe_agent(term)
+            result = web_recipe_agent(
+                term
+            )
 
-            if web:
+            if result:
 
-                recipes.extend(web)
+                recipes.extend(result)
 
 
         except Exception as e:
@@ -102,9 +104,8 @@ def recipe_search_agent(food):
 
 
 
-    # Normalize
-
     cleaned = []
+
 
     for item in recipes:
 
@@ -116,14 +117,43 @@ def recipe_search_agent(food):
 
 
 
-    # Remove duplicates
+    blocked_words = [
+
+        "youtube",
+        "pinterest",
+        "facebook",
+        "instagram",
+        "category",
+        "collection",
+        "search",
+        "author"
+
+    ]
+
+
 
     final = []
 
     seen = set()
 
 
+
     for recipe in cleaned:
+
+
+        url = recipe.get(
+            "URL",
+            ""
+        ).lower()
+
+
+        if any(
+            word in url
+            for word in blocked_words
+        ):
+
+            continue
+
 
 
         name = recipe.get(
@@ -132,16 +162,11 @@ def recipe_search_agent(food):
         )
 
 
-        url = recipe.get(
-            "URL",
-            ""
-        )
-
-
         if not name:
 
             name = (
-                url.split("/")[-1]
+                url
+                .split("/")[-1]
                 .replace("-", " ")
                 .title()
             )
@@ -153,24 +178,30 @@ def recipe_search_agent(food):
 
 
 
-        name_lower = name.lower()
+        # Keep only matching recipes
+
+        food_check = food.lower()
 
 
-        # keep only matching food
-
-        if food.lower() not in name_lower:
-
-            continue
-
-
-
-        if name_lower in seen:
+        if (
+            food_check not in name.lower()
+            and food_check not in url
+        ):
 
             continue
 
 
 
-        seen.add(name_lower)
+        key = name.lower().strip()
+
+
+        if key in seen:
+
+            continue
+
+
+
+        seen.add(key)
 
 
         recipe["Recipe"] = name
@@ -180,16 +211,11 @@ def recipe_search_agent(food):
 
 
 
-        if len(final) >= 5:
-
-            break
-
-
-
     print(
-        "TOTAL RECIPES:",
+        "FINAL RECIPES:",
         len(final)
     )
+
 
 
     return {
@@ -198,7 +224,7 @@ def recipe_search_agent(food):
 
         "food_info": food_info,
 
-        "recipes": final,
+        "recipes": final[:5],
 
         "count": len(final)
 
