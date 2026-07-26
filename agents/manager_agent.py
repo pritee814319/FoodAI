@@ -31,12 +31,14 @@ def manager_agent(food_name, people):
         food_name
     )
 
-
+print("SEARCH RESULT:")
+print(search_result)
     recipes = search_result.get(
         "recipes",
         []
     )
-
+print("RECIPES FOUND:")
+print(recipes)
 
     final_recipes = []
 
@@ -51,6 +53,8 @@ def manager_agent(food_name, people):
             recipe
         )
 
+print("PARSED RECIPE:")
+print(parsed)
 
         if parsed.get("Ingredients"):
 
