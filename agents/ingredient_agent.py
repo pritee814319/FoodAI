@@ -145,7 +145,8 @@ def ingredient_agent(ingredients):
 
     for ingredient in ingredients:
 
-
+if len(ingredient.split()) > 12:
+    continue
         try:
 
             print(
