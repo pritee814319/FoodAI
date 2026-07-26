@@ -56,30 +56,21 @@ if analyze and food:
         try:
 
             result = manager_agent(
-    food_name=food,
-    people=people
-)
-result = manager_agent(
-    food_name=food,
-    people=people
-)
-
-st.write("DEBUG RESULT:")
-st.write(result)
-        except Exception as e:
-
-            st.error(
-                f"FoodAI Error: {e}"
+                food_name=food,
+                people=people
             )
 
+            # Uncomment if you want to see the returned data
+            # st.write(result)
+
+        except Exception as e:
+
+            st.error(f"FoodAI Error: {e}")
             st.stop()
 
+    st.success("Analysis Complete!")
 
-    st.success(
-        "Analysis Complete!"
-    )
-
-
+    
     # ---------------------------------------------------
     # Food Image
     # ---------------------------------------------------
