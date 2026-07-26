@@ -17,44 +17,43 @@ def divide_nutrition(total, people):
 
 def manager_agent(food_name, people):
 
-    print(
-        "MANAGER START:",
-        food_name
-    )
+    print("MANAGER START:", food_name)
 
 
-    # -----------------------------------
     # Search recipes
-    # -----------------------------------
-
     search_result = recipe_search_agent(
         food_name
     )
 
-print("SEARCH RESULT:")
-print(search_result)
+
+    print("SEARCH RESULT:")
+    print(search_result)
+
+
     recipes = search_result.get(
         "recipes",
         []
     )
-print("RECIPES FOUND:")
-print(recipes)
+
+
+    print("RECIPES FOUND:")
+    print(recipes)
+
 
     final_recipes = []
 
 
-    # -----------------------------------
-    # Parse recipes
-    # -----------------------------------
-
     for recipe in recipes:
+
 
         parsed = recipe_parser_agent(
             recipe
         )
 
-print("PARSED RECIPE:")
-print(parsed)
+
+        print("PARSED RECIPE:")
+        print(parsed)
+
 
         if parsed.get("Ingredients"):
 
@@ -66,25 +65,14 @@ print(parsed)
     if not final_recipes:
 
         return {
-
             "recipes": [],
-
             "nutrition": {
-
                 "Total Recipe Nutrition": {},
-
                 "Nutrition Per Person": {}
-
             }
-
         }
 
 
-
-    # -----------------------------------
-    # Calculate nutrition
-    # using first complete recipe
-    # -----------------------------------
 
     first_recipe = final_recipes[0]
 
@@ -102,31 +90,20 @@ print(parsed)
 
     return {
 
-
         "query": food_name,
-
 
         "servings": people,
 
-
         "recipes": final_recipes,
-
 
         "nutrition": {
 
-
-            "Total Recipe Nutrition":
-
-            total,
-
+            "Total Recipe Nutrition": total,
 
             "Nutrition Per Person":
-
-            divide_nutrition(
-                total,
-                people
-            )
-
+                divide_nutrition(
+                    total,
+                    people
+                )
         }
-
     }
