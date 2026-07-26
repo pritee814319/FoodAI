@@ -204,7 +204,9 @@ def recipe_search_agent(food):
 
             final.append(
                 recipe
-            )        print(
+            )      
+            
+               print(
         "TOTAL RECIPES:",
         len(final)
     )
@@ -220,4 +222,5 @@ def recipe_search_agent(food):
 
         "count": len(final)
 
+    }
     }
