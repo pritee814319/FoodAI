@@ -105,9 +105,8 @@ def manager_agent(food_name, people):
 
 
     nutrition = ingredient_agent(
-        first_recipe["Ingredients"]
-    )
-
+    first_recipe.get("Ingredients", [])
+)
 
 
     total = nutrition.get(
