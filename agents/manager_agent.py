@@ -3,7 +3,6 @@ from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_agent import ingredient_agent
 
 
-
 def divide_nutrition(total, people):
 
     return {
@@ -12,48 +11,32 @@ def divide_nutrition(total, people):
     }
 
 
-
 def manager_agent(food_name, people):
 
     print("MANAGER START:", food_name)
 
-
     search_result = recipe_search_agent(food_name)
-
 
     recipes = search_result.get(
         "recipes",
         []
     )
 
-
-    print(
-        "NUMBER OF RECIPES:",
-        len(recipes)
-    )
-
+    print("RECIPES FOUND:", len(recipes))
 
     final_recipes = []
 
-
     for recipe in recipes:
 
-        print(
-            "RAW RECIPE:",
-            recipe
-        )
+        print("PROCESSING RECIPE:", recipe)
 
+        parsed = recipe_parser_agent(recipe)
 
-        parsed = recipe_parser_agent(
-            recipe
-        )
-print("PARSER OUTPUT:", parsed)
+        print("PARSER OUTPUT:", parsed)
 
-               if parsed.get("Ingredients"):
+        if parsed.get("Ingredients"):
 
-            final_recipes.append(
-                parsed
-            )
+            final_recipes.append(parsed)
 
 
     print(
@@ -62,22 +45,15 @@ print("PARSER OUTPUT:", parsed)
     )
 
 
-    if len(final_recipes) == 0:
+    if not final_recipes:
 
         return {
-
             "recipes": [],
-
             "nutrition": {
-
                 "Total Recipe Nutrition": {},
-
                 "Nutrition Per Person": {}
-
             }
-
         }
-
 
 
     first_recipe = final_recipes[0]
