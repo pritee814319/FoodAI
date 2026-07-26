@@ -84,10 +84,10 @@ if analyze and food:
         if image_url:
 
             st.image(
-                image_url,
-                caption=food.title(),
-                use_container_width=True
-            )
+    image_url,
+    caption=food.title(),
+    width="stretch"
+)
 
     except Exception:
 
