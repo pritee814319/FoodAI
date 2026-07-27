@@ -1,383 +1,247 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import re
-
-
-
-def extract_json_objects(data):
-
-    """
-    Find all recipe objects from JSON-LD
-    """
-
-    results = []
-
-
-    if isinstance(data, dict):
-
-        if "@graph" in data:
-
-            results.extend(
-                extract_json_objects(
-                    data["@graph"]
-                )
-            )
-
-
-        else:
-
-            results.append(data)
-
-
-
-    elif isinstance(data, list):
-
-        for item in data:
-
-            results.extend(
-                extract_json_objects(item)
-            )
-
-
-    return results
-
-
-
-
-def clean_ingredient(item):
-
-
-    if not isinstance(item,str):
-
-        return None
-
-
-    text=item.strip()
-
-
-
-    if len(text)<3:
-
-        return None
-
-
-
-    bad=[
-
-        "optional",
-        "to taste",
-        "for garnish",
-        "recipe",
-        "photo",
-        "note"
-
-    ]
-
-
-
-    lower=text.lower()
-
-
-
-    if any(
-        x in lower
-        for x in bad
-    ):
-
-        return None
-
-
-
-    # remove numbers
-
-    text=re.sub(
-        r"^\d+[\d\/\.\s¼½¾]*",
-        "",
-        text
-    )
-
-
-
-    # remove measurements
-
-    text=re.sub(
-
-        r"\b(cups?|tbsp|tablespoons?|tsp|teaspoons?|grams?|ml)\b",
-
-        "",
-
-        text,
-
-        flags=re.I
-
-    )
-
-
-
-    text=text.strip(
-        " ,-"
-    )
-
-
-
-    return text
-
-
-
-
-
-def clean_instruction(step):
-
-
-    if isinstance(step,dict):
-
-        step=step.get(
-            "text",
-            ""
-        )
-
-
-    if not isinstance(step,str):
-
-        return None
-
-
-
-    step=step.strip()
-
-
-
-    if len(step)<10:
-
-        return None
-
-
-
-    return step
-
-
-
 
 
 def recipe_parser_agent(url):
 
-
-    print(
-        "PARSING URL:",
-        url
-    )
-
-
     try:
 
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
 
-        response=requests.get(
 
+        response = requests.get(
             url,
-
-            headers={
-                "User-Agent":
-                "Mozilla/5.0"
-            },
-
-            timeout=15
-
+            headers=headers,
+            timeout=10
         )
 
 
-
-        soup=BeautifulSoup(
-
+        soup = BeautifulSoup(
             response.text,
-
             "html.parser"
-
         )
 
 
-
-        ingredients=[]
-
-        instructions=[]
+        ingredients = []
+        instructions = []
 
 
+        # -------------------------
+        # Extract JSON-LD recipe
+        # -------------------------
 
-        scripts=soup.find_all(
-
+        scripts = soup.find_all(
             "script",
-
             type="application/ld+json"
-
         )
-
-
-
-        print(
-            "JSON SCRIPTS:",
-            len(scripts)
-        )
-
 
 
         for script in scripts:
 
-
             try:
 
-                data=json.loads(
+                if not script.string:
+                    continue
+
+
+                data = json.loads(
                     script.string
                 )
 
 
-            except:
+                if isinstance(data, list):
 
+                    items = data
+
+                else:
+
+                    items = [data]
+
+
+
+                for item in items:
+
+
+                    if not isinstance(item, dict):
+                        continue
+
+
+                    recipe_type = str(
+                        item.get("@type", "")
+                    )
+
+
+                    if "Recipe" not in recipe_type:
+                        continue
+
+
+
+                    ingredients = item.get(
+                        "recipeIngredient",
+                        []
+                    )
+
+
+                    raw_steps = item.get(
+                        "recipeInstructions",
+                        []
+                    )
+
+
+
+                    for step in raw_steps:
+
+
+                        if isinstance(step, dict):
+
+                            text = step.get(
+                                "text",
+                                ""
+                            )
+
+                            if text:
+                                instructions.append(text)
+
+
+                        elif isinstance(step, str):
+
+                            instructions.append(step)
+
+
+
+            except Exception as e:
+
+                print(
+                    "JSON-LD error:",
+                    e
+                )
+
+
+
+        # -------------------------
+        # Clean ingredients
+        # -------------------------
+
+        clean_ingredients = []
+
+
+        for item in ingredients:
+
+
+            if not isinstance(item, str):
                 continue
 
 
-
-            objects=extract_json_objects(
-                data
-            )
+            item = item.strip()
 
 
+            if len(item) < 3:
+                continue
 
-            for obj in objects:
 
-
-                recipe_type=str(
-                    obj.get(
-                        "@type",
-                        ""
-                    )
-                )
+            clean_ingredients.append(item)
 
 
 
-                if "Recipe" not in recipe_type:
-
-                    continue
-
-
-
-                print(
-                    "FOUND RECIPE JSON"
-                )
-
-
-
-                raw_ing=obj.get(
-
-                    "recipeIngredient",
-
-                    []
-
-                )
-
-
-
-                for ing in raw_ing:
-
-
-                    clean=clean_ingredient(
-                        ing
-                    )
-
-
-                    if clean:
-
-                        ingredients.append(
-                            clean
-                        )
-
-
-
-                raw_steps=obj.get(
-
-                    "recipeInstructions",
-
-                    []
-
-                )
-
-
-
-                for step in raw_steps:
-
-
-                    clean=clean_instruction(
-                        step
-                    )
-
-
-                    if clean:
-
-                        instructions.append(
-                            clean
-                        )
-
-
-
-
-        ingredients=list(
-            dict.fromkeys(
-                ingredients
-            )
+        ingredients = list(
+            dict.fromkeys(clean_ingredients)
         )
 
 
-        instructions=list(
-            dict.fromkeys(
-                instructions
-            )
+
+        # -------------------------
+        # Clean instructions
+        # -------------------------
+
+        clean_instructions = []
+
+
+        for step in instructions:
+
+
+            if not isinstance(step, str):
+                continue
+
+
+            step = step.strip()
+
+
+            if len(step) < 5:
+                continue
+
+
+            clean_instructions.append(step)
+
+
+
+        instructions = list(
+            dict.fromkeys(clean_instructions)
         )
 
+
+
+        # -------------------------
+        # Validation
+        # -------------------------
+
+        if len(ingredients) < 5:
+
+            return {
+
+                "Ingredients": [],
+
+                "Instructions": [],
+
+                "URL": url
+
+            }
+
+
+
+        if len(instructions) < 3:
+
+            return {
+
+                "Ingredients": [],
+
+                "Instructions": [],
+
+                "URL": url
+
+            }
+
+
+
+        return {
+
+            "Ingredients": ingredients[:30],
+
+            "Instructions": instructions[:30],
+
+            "URL": url
+
+        }
+
+
+
+    except Exception as e:
 
 
         print(
-            "INGREDIENT COUNT:",
-            len(ingredients)
+            "Parser error:",
+            e
         )
 
 
-        print(
-            "STEP COUNT:",
-            len(instructions)
-        )
+        return {
 
+            "Ingredients": [],
 
-if len(ingredients) < 5:
+            "Instructions": [],
 
-    return {
+            "URL": url
 
-        "Ingredients": [],
-
-        "Instructions": [],
-
-        "URL": url
-
-    }
-
-
-if len(instructions) < 3:
-
-    return {
-
-        "Ingredients": [],
-
-        "Instructions": [],
-
-        "URL": url
-
-    }
-
-
-return {
-
-    "Ingredients": ingredients[:30],
-
-    "Instructions": instructions[:30],
-
-    "URL": url
-
-}
+        }
