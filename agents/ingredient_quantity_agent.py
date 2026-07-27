@@ -8,15 +8,15 @@ import re
 UNIT_TO_GRAMS = {
 
     "cup": {
-        "rice flakes": 100,
-        "poha": 100,
+        "rice flakes": 75,
+        "poha": 75,
         "peanuts": 146,
         "vegetable oil": 218,
         "coconut": 80
     },
 
     "cups": {
-        "rice flakes": 100,
+        "rice flakes": 200,
         "poha": 100,
         "peanuts": 146,
         "vegetable oil": 218,
