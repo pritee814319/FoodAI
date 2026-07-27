@@ -192,13 +192,20 @@ def manager_agent(food_name, people):
     # FOOD IMAGE
     ###################################
 
-    image_url = None
+   print("CALLING IMAGE AGENT NOW")
 
-    try:
+image_url = None
 
-        image_url = food_image_agent(
-            food_name
-        )
+try:
+
+    image_url = food_image_agent(
+        food_name
+    )
+
+    print(
+        "IMAGE RESULT FROM AGENT:",
+        image_url
+    )
 
         print(
             "IMAGE:",
