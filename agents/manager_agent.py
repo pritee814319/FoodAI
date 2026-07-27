@@ -24,16 +24,19 @@ def manager_agent(food_name, people):
     print("FOOD:", food_name)
 
 
-    # -------------------------------
-    # RECIPE SEARCH
-    # -------------------------------
+    ###################################
+    # SEARCH RECIPES
+    ###################################
 
-    search_result = recipe_search_agent(food_name)
+    search_result = recipe_search_agent(
+        food_name
+    )
 
     recipes = search_result.get(
         "recipes",
         []
     )
+
 
     print(
         "RECIPES FOUND:",
@@ -44,9 +47,9 @@ def manager_agent(food_name, people):
     parsed_recipes = []
 
 
-    # -------------------------------
-    # RECIPE PARSER
-    # -------------------------------
+    ###################################
+    # PARSE RECIPES
+    ###################################
 
     for recipe in recipes:
 
@@ -63,7 +66,9 @@ def manager_agent(food_name, people):
 
         try:
 
-            parsed = recipe_parser_agent(url)
+            parsed = recipe_parser_agent(
+                url
+            )
 
 
             if parsed.get("Ingredients"):
@@ -74,6 +79,7 @@ def manager_agent(food_name, people):
                 )
 
                 parsed["URL"] = url
+
 
                 parsed_recipes.append(
                     parsed
@@ -88,10 +94,12 @@ def manager_agent(food_name, people):
             )
 
 
+
     print(
         "VALID RECIPES:",
         len(parsed_recipes)
     )
+
 
 
     if not parsed_recipes:
@@ -116,9 +124,9 @@ def manager_agent(food_name, people):
 
 
 
-    # -------------------------------
-    # RECIPE RANKING
-    # -------------------------------
+    ###################################
+    # RANK RECIPES
+    ###################################
 
     ranking = recipe_rank_agent(
         parsed_recipes
@@ -145,9 +153,10 @@ def manager_agent(food_name, people):
     )
 
 
-    # -------------------------------
+
+    ###################################
     # INGREDIENT QUANTITY
-    # -------------------------------
+    ###################################
 
     raw_ingredients = selected_recipe.get(
         "Ingredients",
@@ -167,9 +176,9 @@ def manager_agent(food_name, people):
 
 
 
-    # -------------------------------
-    # NUTRITION
-    # -------------------------------
+    ###################################
+    # USDA NUTRITION
+    ###################################
 
     nutrition_result = ingredient_agent(
         quantity_output
@@ -182,19 +191,17 @@ def manager_agent(food_name, people):
     )
 
 
-    print(
-        "TOTAL NUTRITION:",
-        total
-    )
-
 
     ###################################
     # FOOD IMAGE
     ###################################
 
-    image_url = None
+    print(
+        "CALLING IMAGE AGENT NOW"
+    )
 
-    print("CALLING IMAGE AGENT NOW")
+
+    image_url = None
 
 
     try:
@@ -202,6 +209,7 @@ def manager_agent(food_name, people):
         image_url = food_image_agent(
             food_name
         )
+
 
         print(
             "IMAGE RESULT:",
@@ -217,11 +225,12 @@ def manager_agent(food_name, people):
         )
 
 
+
     ###################################
-    # RETURN
+    # RETURN RESULT
     ###################################
 
-     return {
+    return {
 
         "query": food_name,
 
