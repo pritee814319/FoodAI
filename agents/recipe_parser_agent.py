@@ -5,14 +5,8 @@ import json
 
 def recipe_parser_agent(url):
 
-  
-try:
+    try:
 
-    something()
-
-except Exception as e:
-
-    print(e)
         headers = {
             "User-Agent": "Mozilla/5.0"
         }
@@ -35,9 +29,7 @@ except Exception as e:
         instructions = []
 
 
-        # -------------------------
-        # Extract JSON-LD recipe
-        # -------------------------
+        # Extract JSON-LD recipe data
 
         scripts = soup.find_all(
             "script",
@@ -47,13 +39,8 @@ except Exception as e:
 
         for script in scripts:
 
-          try:
+            try:
 
-    something()
-
-except Exception as e:
-
-    print(e)
                 if not script.string:
                     continue
 
@@ -72,9 +59,7 @@ except Exception as e:
                     items = [data]
 
 
-
                 for item in items:
-
 
                     if not isinstance(item, dict):
                         continue
@@ -89,7 +74,6 @@ except Exception as e:
                         continue
 
 
-
                     ingredients = item.get(
                         "recipeIngredient",
                         []
@@ -102,9 +86,7 @@ except Exception as e:
                     )
 
 
-
                     for step in raw_steps:
-
 
                         if isinstance(step, dict):
 
@@ -132,15 +114,12 @@ except Exception as e:
 
 
 
-        # -------------------------
         # Clean ingredients
-        # -------------------------
 
         clean_ingredients = []
 
 
         for item in ingredients:
-
 
             if not isinstance(item, str):
                 continue
@@ -163,15 +142,12 @@ except Exception as e:
 
 
 
-        # -------------------------
         # Clean instructions
-        # -------------------------
 
         clean_instructions = []
 
 
         for step in instructions:
-
 
             if not isinstance(step, str):
                 continue
@@ -194,20 +170,14 @@ except Exception as e:
 
 
 
-        # -------------------------
-        # Validation
-        # -------------------------
+        # Ignore bad recipes
 
         if len(ingredients) < 5:
 
             return {
-
                 "Ingredients": [],
-
                 "Instructions": [],
-
                 "URL": url
-
             }
 
 
@@ -215,13 +185,9 @@ except Exception as e:
         if len(instructions) < 3:
 
             return {
-
                 "Ingredients": [],
-
                 "Instructions": [],
-
                 "URL": url
-
             }
 
 
@@ -239,7 +205,6 @@ except Exception as e:
 
 
     except Exception as e:
-
 
         print(
             "Parser error:",
