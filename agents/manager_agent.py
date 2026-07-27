@@ -2,174 +2,47 @@ from agents.recipe_search import recipe_search_agent
 from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_quantity_agent import ingredient_quantity_agent
 from agents.ingredient_agent import ingredient_agent
+from agents.recipe_rank_agent import recipe_rank_agent
 
+
+
+#################################################
+# DIVIDE NUTRITION PER PERSON
+#################################################
 
 def divide_nutrition(total, people):
 
     if people <= 0:
         people = 1
 
+
     return {
+
         key: round(value / people, 2)
-        for key, value in total.items()#################################################
-# RECIPE RANKING AGENT
+
+        for key, value in total.items()
+
+    }
+
+
+
+
+
 #################################################
-
-def recipe_rank_agent(recipes):
-
-
-    print(
-        "========== RECIPE RANK AGENT =========="
-    )
-
-
-    if not recipes:
-
-        return {
-
-            "Best Recipe": None,
-
-            "Ranked Recipes": []
-
-        }
-
-
-
-    ranked=[]
-
-
-
-    for recipe in recipes:
-
-
-        score=0
-
-
-        ingredients = recipe.get(
-            "Ingredients",
-            []
-        )
-
-
-        instructions = recipe.get(
-            "Instructions",
-            []
-        )
-
-
-        name = recipe.get(
-            "Recipe",
-            "Unknown"
-        )
-
-
-
-        #################################
-        # INGREDIENT SCORE
-        #################################
-
-        ingredient_count=len(
-            ingredients
-        )
-
-
-        if ingredient_count >= 10:
-
-            score += 30
-
-
-        elif ingredient_count >=5:
-
-            score +=20
-
-
-
-        #################################
-        # INSTRUCTION SCORE
-        #################################
-
-        instruction_count=len(
-            instructions
-        )
-
-
-        if instruction_count >=8:
-
-            score +=40
-
-
-        elif instruction_count >=3:
-
-            score +=20
-
-
-
-        #################################
-        # RECIPE QUALITY
-        #################################
-
-        if "poha" in name.lower():
-
-            score +=10
-
-
-        if "traditional" in name.lower():
-
-            score +=5
-
-
-
-        ranked.append(
-
-            {
-
-            "Recipe": name,
-
-            "Score": score,
-
-            "Ingredients Count": ingredient_count,
-
-            "Instruction Count": instruction_count
-
-            }
-
-        )
-
-
-
-    ranked.sort(
-
-        key=lambda x:x["Score"],
-
-        reverse=True
-
-    )
-
-
-
-    return {
-
-
-        "Best Recipe":
-
-            ranked[0]["Recipe"],
-
-
-
-        "Ranked Recipes":
-
-            ranked
-
-    }
-    }
-
-
+# MANAGER AGENT
+#################################################
 
 def manager_agent(food_name, people):
 
 
-    print("========== MANAGER START ==========")
-    print("FOOD:", food_name)
+    print(
+        "========== MANAGER START =========="
+    )
+
+    print(
+        "FOOD:",
+        food_name
+    )
 
 
 
@@ -177,7 +50,9 @@ def manager_agent(food_name, people):
     # SEARCH RECIPES
     ###################################
 
-    search_result = recipe_search_agent(food_name)
+    search_result = recipe_search_agent(
+        food_name
+    )
 
 
     recipes = search_result.get(
@@ -219,8 +94,9 @@ def manager_agent(food_name, people):
         try:
 
 
-            parsed = recipe_parser_agent(url)
-
+            parsed = recipe_parser_agent(
+                url
+            )
 
 
             if parsed.get("Ingredients"):
@@ -236,9 +112,9 @@ def manager_agent(food_name, people):
                     parsed
                 )
 
-from agents.recipe_rank_agent import recipe_rank_agent
 
         except Exception as e:
+
 
             print(
                 "PARSER ERROR:",
@@ -255,7 +131,7 @@ from agents.recipe_rank_agent import recipe_rank_agent
 
 
     ###################################
-    # NO RECIPE FOUND
+    # NO RECIPES
     ###################################
 
     if not parsed_recipes:
@@ -279,36 +155,49 @@ from agents.recipe_rank_agent import recipe_rank_agent
 
 
 
+
+
     ###################################
-    # USE FIRST RECIPE FOR NUTRITION
+    # RANK RECIPES
     ###################################
 
     ranking = recipe_rank_agent(
-    parsed_recipes
-)
+        parsed_recipes
+    )
 
 
-print(
-    "RANKING:",
-    ranking
-)
-
-
-best_recipe_name = ranking.get(
-    "Best Recipe"
-)
+    print(
+        "RANKING:",
+        ranking
+    )
 
 
 
-selected_recipe = next(
-
-    recipe for recipe in parsed_recipes
-
-    if recipe.get("Recipe") == best_recipe_name
-
-)
+    best_recipe_name = ranking.get(
+        "Best Recipe"
+    )
 
 
+
+    selected_recipe = parsed_recipes[0]
+
+
+
+    for recipe in parsed_recipes:
+
+        if recipe.get("Recipe") == best_recipe_name:
+
+            selected_recipe = recipe
+
+            break
+
+
+
+
+
+    ###################################
+    # INGREDIENT EXTRACTION
+    ###################################
 
     raw_ingredients = selected_recipe.get(
         "Ingredients",
@@ -316,11 +205,11 @@ selected_recipe = next(
     )
 
 
-
     print(
         "RAW INGREDIENTS:",
         raw_ingredients
     )
+
 
 
 
@@ -333,7 +222,6 @@ selected_recipe = next(
     )
 
 
-
     print(
         "QUANTITY OUTPUT:",
         quantity_output
@@ -341,8 +229,9 @@ selected_recipe = next(
 
 
 
+
     ###################################
-    # USDA NUTRITION AGENT
+    # USDA NUTRITION
     ###################################
 
     nutrition_result = ingredient_agent(
@@ -350,12 +239,10 @@ selected_recipe = next(
     )
 
 
-
     total = nutrition_result.get(
         "Total Nutrition",
         {}
     )
-
 
 
     print(
@@ -365,8 +252,10 @@ selected_recipe = next(
 
 
 
+
+
     ###################################
-    # RETURN RESULT
+    # FINAL RESPONSE
     ###################################
 
     return {
@@ -378,7 +267,24 @@ selected_recipe = next(
         "servings": people,
 
 
-        "recipes": parsed_recipes,
+        "recommended_recipe":
+
+            ranking.get(
+                "Best Recipe"
+            ),
+
+
+        "recipe_ranking":
+
+            ranking.get(
+                "Ranked Recipes"
+            ),
+
+
+        "recipes":
+
+            parsed_recipes,
+
 
 
         "nutrition": {
