@@ -228,7 +228,7 @@ def manager_agent(food_name, people):
 
         "servings": people,
 
-        "food_image": food_image,
+        "food_image": image_url,
 
         "recipes": parsed_recipes,
 
