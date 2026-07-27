@@ -219,31 +219,30 @@ except Exception as e:
     )
 
 
-    ###################################
-    # RETURN
-    ###################################
+###################################
+# RETURN
+###################################
 
-    return {
+return {
 
-        "query": food_name,
+    "query": food_name,
 
-        "servings": people,
+    "servings": people,
 
-        "food_image": image_url,
+    "food_image": image_url,
 
-        "recipes": parsed_recipes,
+    "recipes": parsed_recipes,
 
-        "nutrition": {
+    "nutrition": {
 
-            "Total Recipe Nutrition": total,
+        "Total Recipe Nutrition": total,
 
-            "Nutrition Per Person":
-                divide_nutrition(
-                    total,
-                    people
-                )
-
-        }
+        "Nutrition Per Person":
+            divide_nutrition(
+                total,
+                people
+            )
 
     }
-    
+
+}
