@@ -6,7 +6,7 @@ from agents.ingredient_agent import ingredient_agent
 
 
 #################################################
-# DIVIDE NUTRITION PER PERSON
+# DIVIDE NUTRITION BY PEOPLE
 #################################################
 
 def divide_nutrition(total, people):
@@ -14,19 +14,10 @@ def divide_nutrition(total, people):
     if people <= 0:
         people = 1
 
-
     return {
-
-        key: round(
-            value / people,
-            2
-        )
-
+        key: round(value / people, 2)
         for key, value in total.items()
-
     }
-
-
 
 
 
@@ -37,14 +28,9 @@ def divide_nutrition(total, people):
 def manager_agent(food_name, people):
 
 
-    print(
-        "========== MANAGER START =========="
-    )
-
-    print(
-        "FOOD:",
-        food_name
-    )
+    print("========== MANAGER START ==========")
+    print("FOOD:", food_name)
+    print("PEOPLE:", people)
 
 
 
@@ -70,7 +56,7 @@ def manager_agent(food_name, people):
 
 
 
-    parsed_recipes=[]
+    parsed_recipes = []
 
 
 
@@ -102,7 +88,6 @@ def manager_agent(food_name, people):
             )
 
 
-
             ingredients = parsed.get(
                 "Ingredients",
                 []
@@ -116,7 +101,7 @@ def manager_agent(food_name, people):
 
 
 
-            if ingredients:
+            if len(ingredients) > 0:
 
 
                 parsed["Recipe"] = recipe.get(
@@ -141,8 +126,6 @@ def manager_agent(food_name, people):
 
 
 
-
-
     print(
         "VALID RECIPES:",
         len(parsed_recipes)
@@ -150,10 +133,8 @@ def manager_agent(food_name, people):
 
 
 
-
-
     #################################################
-    # NO RECIPES FOUND
+    # NO RECIPE FOUND
     #################################################
 
     if not parsed_recipes:
@@ -170,26 +151,24 @@ def manager_agent(food_name, people):
 
             "nutrition": {
 
-
                 "Total Recipe Nutrition": {},
-
 
                 "Nutrition Per Person": {}
 
             }
 
-
         }
 
 
 
-
-
     #################################################
-    # INGREDIENT PROCESSING
+    # TAKE BEST RECIPE
     #################################################
 
-    raw_ingredients = parsed_recipes[0].get(
+    selected_recipe = parsed_recipes[0]
+
+
+    raw_ingredients = selected_recipe.get(
         "Ingredients",
         []
     )
@@ -206,26 +185,25 @@ def manager_agent(food_name, people):
 
 
 
+
     #################################################
-    # QUANTITY AGENT
+    # CONVERT INGREDIENTS TO GRAMS
     #################################################
 
-    quantity_result = ingredient_quantity_agent(
+    quantity_ingredients = ingredient_quantity_agent(
         raw_ingredients
     )
 
 
 
     print(
-        "========== QUANTITY RESULT =========="
+        "========== QUANTITY OUTPUT =========="
     )
 
 
     print(
-        quantity_result
+        quantity_ingredients
     )
-
-
 
 
 
@@ -234,13 +212,13 @@ def manager_agent(food_name, people):
     #################################################
 
     nutrition_result = ingredient_agent(
-        quantity_result
+        quantity_ingredients
     )
 
 
 
     print(
-        "========== USDA RESULT =========="
+        "========== NUTRITION RESULT =========="
     )
 
 
@@ -257,8 +235,6 @@ def manager_agent(food_name, people):
 
 
 
-
-
     #################################################
     # FINAL RESPONSE
     #################################################
@@ -272,14 +248,16 @@ def manager_agent(food_name, people):
         "servings": people,
 
 
-        "recipes": parsed_recipes,
+        "recipes": parsed_recipes[:3],
 
 
 
         "nutrition": {
 
 
-            "Total Recipe Nutrition": total,
+            "Total Recipe Nutrition":
+
+                total,
 
 
 
