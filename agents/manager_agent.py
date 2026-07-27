@@ -188,13 +188,16 @@ def manager_agent(food_name, people):
     )
 
 
-    ###################################
-    # FOOD IMAGE
-    ###################################
-
-   print("CALLING IMAGE AGENT NOW")
+###################################
+# FOOD IMAGE
+###################################
 
 image_url = None
+
+print(
+    "CALLING IMAGE AGENT NOW"
+)
+
 
 try:
 
@@ -203,21 +206,17 @@ try:
     )
 
     print(
-        "IMAGE RESULT FROM AGENT:",
+        "IMAGE RESULT:",
         image_url
     )
 
-        print(
-            "IMAGE:",
-            image_url
-        )
 
-    except Exception as e:
+except Exception as e:
 
-        print(
-            "IMAGE ERROR:",
-            e
-        )
+    print(
+        "IMAGE ERROR:",
+        e
+    )
 
 
     ###################################
