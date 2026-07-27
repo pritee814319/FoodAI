@@ -43,7 +43,7 @@ def recipe_search_agent(food):
                 )
 
 
-                if url:
+               if url and not "youtube.com" in url:
 
                     all_recipes.append(
                         {
