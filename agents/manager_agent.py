@@ -1,4 +1,3 @@
-from agents.food_image_agent import food_image_agent
 from agents.recipe_search import recipe_search_agent
 from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_quantity_agent import ingredient_quantity_agent
@@ -6,44 +5,23 @@ from agents.ingredient_agent import ingredient_agent
 from agents.recipe_rank_agent import recipe_rank_agent
 
 
-
-#################################################
-# DIVIDE NUTRITION PER PERSON
-#################################################
-
 def divide_nutrition(total, people):
 
     if people <= 0:
         people = 1
 
-
     return {
-
         key: round(value / people, 2)
-
         for key, value in total.items()
-
     }
 
 
 
-
-
-#################################################
-# MANAGER AGENT
-#################################################
-
 def manager_agent(food_name, people):
 
 
-    print(
-        "========== MANAGER START =========="
-    )
-
-    print(
-        "FOOD:",
-        food_name
-    )
+    print("========== MANAGER START ==========")
+    print("FOOD:", food_name)
 
 
 
@@ -79,7 +57,6 @@ def manager_agent(food_name, people):
 
     for recipe in recipes:
 
-
         url = recipe.get(
             "URL",
             ""
@@ -94,7 +71,6 @@ def manager_agent(food_name, people):
 
         try:
 
-
             parsed = recipe_parser_agent(
                 url
             )
@@ -102,11 +78,13 @@ def manager_agent(food_name, people):
 
             if parsed.get("Ingredients"):
 
-
                 parsed["Recipe"] = recipe.get(
                     "Recipe",
                     food_name
                 )
+
+
+                parsed["URL"] = url
 
 
                 parsed_recipes.append(
@@ -115,7 +93,6 @@ def manager_agent(food_name, people):
 
 
         except Exception as e:
-
 
             print(
                 "PARSER ERROR:",
@@ -131,12 +108,7 @@ def manager_agent(food_name, people):
 
 
 
-    ###################################
-    # NO RECIPES
-    ###################################
-
     if not parsed_recipes:
-
 
         return {
 
@@ -156,10 +128,8 @@ def manager_agent(food_name, people):
 
 
 
-
-
     ###################################
-    # RANK RECIPES
+    # RECIPE RANKING
     ###################################
 
     ranking = recipe_rank_agent(
@@ -173,31 +143,24 @@ def manager_agent(food_name, people):
     )
 
 
-
     best_recipe_name = ranking.get(
         "Best Recipe"
     )
 
 
 
-    selected_recipe = parsed_recipes[0]
-
-
-
-    for recipe in parsed_recipes:
-
-        if recipe.get("Recipe") == best_recipe_name:
-
-            selected_recipe = recipe
-
-            break
-
-
+    selected_recipe = next(
+        (
+            r for r in parsed_recipes
+            if r.get("Recipe") == best_recipe_name
+        ),
+        parsed_recipes[0]
+    )
 
 
 
     ###################################
-    # INGREDIENT EXTRACTION
+    # INGREDIENT QUANTITY
     ###################################
 
     raw_ingredients = selected_recipe.get(
@@ -205,18 +168,6 @@ def manager_agent(food_name, people):
         []
     )
 
-
-    print(
-        "RAW INGREDIENTS:",
-        raw_ingredients
-    )
-
-
-
-
-    ###################################
-    # QUANTITY AGENT
-    ###################################
 
     quantity_output = ingredient_quantity_agent(
         raw_ingredients
@@ -227,7 +178,6 @@ def manager_agent(food_name, people):
         "QUANTITY OUTPUT:",
         quantity_output
     )
-
 
 
 
@@ -246,64 +196,36 @@ def manager_agent(food_name, people):
     )
 
 
-    print(
-        "FINAL TOTAL:",
-        total
-    )
-
-
-
-
 
     ###################################
-    # FINAL RESPONSE
+    # RETURN
     ###################################
 
     return {
 
-    "query": food_name,
 
-    "servings": people,
-
-
-    "food_image":
-
-        image_result,
+        "query": food_name,
 
 
-    "recommended_recipe":
-
-        ranking.get(
-            "Best Recipe"
-        ),
+        "servings": people,
 
 
-    "recipe_ranking":
-
-        ranking.get(
-            "Ranked Recipes"
-        ),
+        "recipes": parsed_recipes,
 
 
-    "recipes":
-
-        parsed_recipes,
+        "nutrition": {
 
 
-    "nutrition": {
-
-        "Total Recipe Nutrition":
-
-            total,
-
-
-        "Nutrition Per Person":
-
-            divide_nutrition(
+            "Total Recipe Nutrition":
                 total,
-                people
-            )
+
+
+            "Nutrition Per Person":
+                divide_nutrition(
+                    total,
+                    people
+                )
+
+        }
 
     }
-
-}
