@@ -1,3 +1,4 @@
+from agents.food_image_agent import food_image_agent
 from agents.recipe_search import recipe_search_agent
 from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_quantity_agent import ingredient_quantity_agent
@@ -195,22 +196,43 @@ def manager_agent(food_name, people):
         {}
     )
 
+###################################
+# FOOD IMAGE
+###################################
 
+image_url = None
+
+try:
+
+    image_url = food_image_agent(
+        food_name
+    )
+
+    print(
+        "IMAGE:",
+        image_url
+    )
+
+except Exception as e:
+
+    print(
+        "IMAGE ERROR:",
+        e
+    )
 
     ###################################
     # RETURN
     ###################################
 
-    return {
+   return {
 
+    "query": food_name,
 
-        "query": food_name,
+    "servings": people,
 
+    "food_image": image_url,
 
-        "servings": people,
-
-
-        "recipes": parsed_recipes,
+    "recipes": parsed_recipes,
 
 
         "nutrition": {
