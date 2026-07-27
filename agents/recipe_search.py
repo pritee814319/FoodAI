@@ -3,7 +3,10 @@ from tools.web_search import tavily_search
 
 def recipe_search_agent(food):
 
-    print("========== RECIPE SEARCH AGENT ==========")
+    print(
+        "========== RECIPE SEARCH AGENT =========="
+    )
+
 
     queries = [
         food,
@@ -24,7 +27,9 @@ def recipe_search_agent(food):
 
         try:
 
-            results = tavily_search(query)
+            results = tavily_search(
+                query
+            )
 
 
             print(
@@ -35,7 +40,11 @@ def recipe_search_agent(food):
 
             for r in results:
 
-                url = r.get("url","")
+                url = r.get(
+                    "url",
+                    ""
+                )
+
 
                 title = r.get(
                     "title",
@@ -43,7 +52,12 @@ def recipe_search_agent(food):
                 )
 
 
-               if url and not "youtube.com" in url:
+                # ignore youtube videos
+                if (
+                    url
+                    and
+                    "youtube.com" not in url
+                ):
 
                     all_recipes.append(
                         {
@@ -53,7 +67,6 @@ def recipe_search_agent(food):
                     )
 
 
-            # STOP after getting recipes
             if len(all_recipes) >= 5:
 
                 break
