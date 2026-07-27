@@ -23,10 +23,7 @@ def manager_agent(food_name, people):
 
 
     # Search recipes
-
-    search_result = recipe_search_agent(
-        food_name
-    )
+    search_result = recipe_search_agent(food_name)
 
 
     recipes = search_result.get(
@@ -41,13 +38,10 @@ def manager_agent(food_name, people):
     )
 
 
-
     parsed_recipes = []
 
 
-
     for recipe in recipes:
-
 
         url = recipe.get(
             "URL",
@@ -61,9 +55,7 @@ def manager_agent(food_name, people):
         )
 
 
-
         try:
-
 
             parsed = recipe_parser_agent(
                 url
@@ -81,7 +73,6 @@ def manager_agent(food_name, people):
             )
 
 
-
             if parsed.get("Ingredients"):
 
 
@@ -96,9 +87,7 @@ def manager_agent(food_name, people):
                 )
 
 
-
         except Exception as e:
-
 
             print(
                 "Parser failed:",
@@ -115,7 +104,6 @@ def manager_agent(food_name, people):
 
 
     if len(parsed_recipes) == 0:
-
 
         return {
 
@@ -135,28 +123,45 @@ def manager_agent(food_name, people):
 
 
 
-    # Calculate nutrition from first recipe
+    # Get ingredients from first recipe
 
     ingredients = parsed_recipes[0].get(
-    "Ingredients",
-    []
-)
-
-print("========== INGREDIENTS SENT TO USDA ==========")
-
-for item in ingredients:
-    print(item)
-
-print("TOTAL INGREDIENT COUNT:", len(ingredients))
+        "Ingredients",
+        []
+    )
 
 
+    print(
+        "========== INGREDIENTS SENT TO USDA =========="
+    )
+
+
+    for item in ingredients:
+
+        print(item)
+
+
+    print(
+        "TOTAL INGREDIENT COUNT:",
+        len(ingredients)
+    )
+
+
+
+    # Calculate nutrition
 
     nutrition_result = ingredient_agent(
-    ingredients
-)
+        ingredients
+    )
 
-print("========== NUTRITION RESULT ==========")
-print(nutrition_result)
+
+    print(
+        "========== NUTRITION RESULT =========="
+    )
+
+    print(
+        nutrition_result
+    )
 
 
 
@@ -177,7 +182,6 @@ print(nutrition_result)
 
 
         "recipes": parsed_recipes,
-
 
 
         "nutrition": {
