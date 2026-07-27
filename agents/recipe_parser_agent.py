@@ -5,176 +5,74 @@ import re
 
 
 
-BAD_INGREDIENT_WORDS = [
-
-    "optional",
-    "for garnish",
-    "to taste",
-    "divided",
-    "as needed",
-    "recipe",
-    "photo",
-    "note",
-    "tips",
-    "comment",
-    "subscribe"
-
-]
-
-
-
-BAD_STEP_WORDS = [
-
-    "jump to",
-    "print",
-    "save",
-    "share",
-    "subscribe",
-    "comment",
-    "nutrition",
-    "calories"
-
-]
-
-
-
-
-def clean_ingredient(text):
+def extract_json_objects(data):
 
     """
-    Clean ingredient names
-    Example:
-    2 cups poha -> poha
-    1 medium onion chopped -> onion
+    Find all recipe objects from JSON-LD
     """
 
-    if not isinstance(text, str):
+    results = []
+
+
+    if isinstance(data, dict):
+
+        if "@graph" in data:
+
+            results.extend(
+                extract_json_objects(
+                    data["@graph"]
+                )
+            )
+
+
+        else:
+
+            results.append(data)
+
+
+
+    elif isinstance(data, list):
+
+        for item in data:
+
+            results.extend(
+                extract_json_objects(item)
+            )
+
+
+    return results
+
+
+
+
+def clean_ingredient(item):
+
+
+    if not isinstance(item,str):
 
         return None
 
 
-    text = text.strip()
+    text=item.strip()
 
 
 
-    if len(text) < 3:
-
-        return None
-
-
-
-    lower = text.lower()
-
-
-
-    # remove bad content
-
-    if any(
-        word in lower
-        for word in BAD_INGREDIENT_WORDS
-    ):
+    if len(text)<3:
 
         return None
 
 
 
-    # remove pure numbers
+    bad=[
 
-    if re.match(
-        r"^[0-9\s./¼½¾-]+$",
-        text
-    ):
-
-        return None
-
-
-
-    # remove measurements
-
-    text = re.sub(
-        r"\b\d+(\.\d+)?\b",
-        "",
-        text
-    )
-
-
-    text = re.sub(
-        r"\b(cups?|tbsp|tablespoons?|tsp|teaspoons?|grams?|kg|ml|oz|lb)\b",
-        "",
-        text,
-        flags=re.I
-    )
-
-
-
-    # remove brackets
-
-    text = re.sub(
-        r"\(.*?\)",
-        "",
-        text
-    )
-
-
-
-    # remove extra words
-
-    remove_words = [
-
-        "finely chopped",
-        "roughly chopped",
-        "chopped",
-        "sliced",
-        "diced",
-        "minced",
-        "optional"
+        "optional",
+        "to taste",
+        "for garnish",
+        "recipe",
+        "photo",
+        "note"
 
     ]
-
-
-    for word in remove_words:
-
-        text = text.replace(
-            word,
-            ""
-        )
-
-
-
-    text = text.strip(
-        " -,:"
-    )
-
-
-
-    if len(text) < 3:
-
-        return None
-
-
-
-    return text.title()
-
-
-
-
-
-def clean_instruction(text):
-
-
-    if not isinstance(text,str):
-
-        return None
-
-
-
-    text = text.strip()
-
-
-
-    if len(text)<10:
-
-        return None
 
 
 
@@ -183,24 +81,80 @@ def clean_instruction(text):
 
 
     if any(
-        word in lower
-        for word in BAD_STEP_WORDS
+        x in lower
+        for x in bad
     ):
 
         return None
 
 
 
-    # remove numbering
+    # remove numbers
 
-    text = re.sub(
-        r"^\d+\.",
+    text=re.sub(
+        r"^\d+[\d\/\.\s¼½¾]*",
         "",
         text
     )
 
 
-    return text.strip()
+
+    # remove measurements
+
+    text=re.sub(
+
+        r"\b(cups?|tbsp|tablespoons?|tsp|teaspoons?|grams?|ml)\b",
+
+        "",
+
+        text,
+
+        flags=re.I
+
+    )
+
+
+
+    text=text.strip(
+        " ,-"
+    )
+
+
+
+    return text
+
+
+
+
+
+def clean_instruction(step):
+
+
+    if isinstance(step,dict):
+
+        step=step.get(
+            "text",
+            ""
+        )
+
+
+    if not isinstance(step,str):
+
+        return None
+
+
+
+    step=step.strip()
+
+
+
+    if len(step)<10:
+
+        return None
+
+
+
+    return step
 
 
 
@@ -209,29 +163,23 @@ def clean_instruction(text):
 def recipe_parser_agent(url):
 
 
+    print(
+        "PARSING URL:",
+        url
+    )
+
+
     try:
 
 
-        print(
-            "PARSING:",
-            url
-        )
-
-
-        headers = {
-
-            "User-Agent":
-            "Mozilla/5.0"
-
-        }
-
-
-
-        response = requests.get(
+        response=requests.get(
 
             url,
 
-            headers=headers,
+            headers={
+                "User-Agent":
+                "Mozilla/5.0"
+            },
 
             timeout=15
 
@@ -239,7 +187,7 @@ def recipe_parser_agent(url):
 
 
 
-        soup = BeautifulSoup(
+        soup=BeautifulSoup(
 
             response.text,
 
@@ -255,12 +203,7 @@ def recipe_parser_agent(url):
 
 
 
-        ###################################
-        # JSON LD EXTRACTION
-        ###################################
-
-
-        scripts = soup.find_all(
+        scripts=soup.find_all(
 
             "script",
 
@@ -270,16 +213,21 @@ def recipe_parser_agent(url):
 
 
 
+        print(
+            "JSON SCRIPTS:",
+            len(scripts)
+        )
+
+
+
         for script in scripts:
 
 
             try:
 
-
                 data=json.loads(
                     script.string
                 )
-
 
 
             except:
@@ -288,35 +236,20 @@ def recipe_parser_agent(url):
 
 
 
-
-            items=[]
-
-
-            if isinstance(data,list):
-
-                items=data
-
-
-            else:
-
-                items=[data]
+            objects=extract_json_objects(
+                data
+            )
 
 
 
-            for item in items:
-
-
-                if not isinstance(
-                    item,
-                    dict
-                ):
-
-                    continue
-
+            for obj in objects:
 
 
                 recipe_type=str(
-                    item.get("@type","")
+                    obj.get(
+                        "@type",
+                        ""
+                    )
                 )
 
 
@@ -327,12 +260,13 @@ def recipe_parser_agent(url):
 
 
 
-                ################################
-                # INGREDIENTS
-                ################################
+                print(
+                    "FOUND RECIPE JSON"
+                )
 
 
-                raw_ing=item.get(
+
+                raw_ing=obj.get(
 
                     "recipeIngredient",
 
@@ -345,26 +279,20 @@ def recipe_parser_agent(url):
                 for ing in raw_ing:
 
 
-                    cleaned=clean_ingredient(
+                    clean=clean_ingredient(
                         ing
                     )
 
 
-                    if cleaned:
+                    if clean:
 
                         ingredients.append(
-                            cleaned
+                            clean
                         )
 
 
 
-
-                ################################
-                # INSTRUCTIONS
-                ################################
-
-
-                raw_steps=item.get(
+                raw_steps=obj.get(
 
                     "recipeInstructions",
 
@@ -377,37 +305,18 @@ def recipe_parser_agent(url):
                 for step in raw_steps:
 
 
-
-                    if isinstance(
-                        step,
-                        dict
-                    ):
-
-                        step=step.get(
-                            "text",
-                            ""
-                        )
-
-
-
-                    cleaned=clean_instruction(
+                    clean=clean_instruction(
                         step
                     )
 
 
-                    if cleaned:
+                    if clean:
 
                         instructions.append(
-                            cleaned
+                            clean
                         )
 
 
-
-
-
-        ###################################
-        # REMOVE DUPLICATES
-        ###################################
 
 
         ingredients=list(
@@ -415,7 +324,6 @@ def recipe_parser_agent(url):
                 ingredients
             )
         )
-
 
 
         instructions=list(
@@ -427,14 +335,13 @@ def recipe_parser_agent(url):
 
 
         print(
-            "FINAL INGREDIENTS:",
-            ingredients
+            "INGREDIENT COUNT:",
+            len(ingredients)
         )
 
 
-
         print(
-            "FINAL STEPS:",
+            "STEP COUNT:",
             len(instructions)
         )
 
@@ -445,7 +352,7 @@ def recipe_parser_agent(url):
 
             "Ingredients":
 
-                ingredients[:25],
+                ingredients[:30],
 
 
             "Instructions":
@@ -465,13 +372,12 @@ def recipe_parser_agent(url):
 
 
         print(
-            "Parser Error:",
+            "PARSER ERROR:",
             e
         )
 
 
         return {
-
 
             "Ingredients":[],
 
