@@ -62,6 +62,11 @@ def food_image_agent(food_name):
 
         data = response.json()
 
+print(
+    "UNSPLASH RESPONSE:",
+    data
+)
+
 
         if data.get("results"):
 
