@@ -230,24 +230,20 @@ except Exception as e:
 
     "servings": people,
 
-    "food_image": image_url,
+    "food_image": food_image,
 
     "recipes": parsed_recipes,
 
+    "nutrition": {
 
-        "nutrition": {
+        "Total Recipe Nutrition": total,
 
-
-            "Total Recipe Nutrition":
+        "Nutrition Per Person":
+            divide_nutrition(
                 total,
-
-
-            "Nutrition Per Person":
-                divide_nutrition(
-                    total,
-                    people
-                )
-
-        }
+                people
+            )
 
     }
+
+}
