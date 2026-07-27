@@ -1,30 +1,33 @@
 import requests
+import os
 import streamlit as st
 
 
 def food_image_agent(food_name):
 
     print("========== FOOD IMAGE AGENT ==========")
-    print("SEARCH IMAGE:", food_name)
+
+    print(
+        "SEARCH IMAGE:",
+        food_name
+    )
 
 
     try:
 
-        api_key = st.secrets.get(
-            "UNSPLASH_ACCESS_KEY"
-        )
-
-
-        print(
-            "API KEY FOUND:",
-            bool(api_key)
-        )
+        # Try Streamlit Cloud Secrets first
+        try:
+            api_key = st.secrets["UNSPLASH_ACCESS_KEY"]
+        except:
+            api_key = os.getenv(
+                "UNSPLASH_ACCESS_KEY"
+            )
 
 
         if not api_key:
 
             print(
-                "Missing Unsplash API Key"
+                "UNSPLASH KEY MISSING"
             )
 
             return None
@@ -35,14 +38,21 @@ def food_image_agent(food_name):
 
 
         params = {
-            "query": food_name + " dish food",
+
+            "query": f"{food_name} food",
+
             "per_page": 1
+
         }
 
 
         headers = {
-            "Authorization": f"Client-ID {api_key}"
+
+            "Authorization":
+            f"Client-ID {api_key}"
+
         }
+
 
 
         response = requests.get(
@@ -54,50 +64,39 @@ def food_image_agent(food_name):
 
 
         print(
-            "STATUS:",
+            "UNSPLASH STATUS:",
             response.status_code
-        )
-
-
-        print(
-            "RAW RESPONSE:",
-            response.text[:500]
         )
 
 
         data = response.json()
 
 
+        print(
+            "UNSPLASH DATA:",
+            data
+        )
 
-        if "results" in data and len(data["results"]) > 0:
+
+        if data.get("results"):
 
 
             image = data["results"][0]
 
 
-            print(
-                "IMAGE FOUND:",
-                image["urls"]["regular"]
-            )
-
-
             return {
 
-                "image_url": image["urls"]["regular"],
+                "image_url":
+                    image["urls"]["regular"],
 
-                "credit": image["user"]["name"]
+                "credit":
+                    image["user"]["name"]
 
             }
 
 
-        else:
 
-            print(
-                "NO IMAGE RESULTS"
-            )
-
-
-            return None
+        return None
 
 
 
