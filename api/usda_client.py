@@ -2,155 +2,91 @@ import os
 import requests
 
 
-USDA_API_KEY = os.getenv("USDA_API_KEY")
-
-
-BASE_URL = (
-    "https://api.nal.usda.gov/fdc/v1/foods/search"
-)
-
-
-
 def search_usda_food(food):
 
+    key = os.getenv("USDA_API_KEY")
 
-    print("============================")
-    print("USDA LOOKUP:", food)
-    print("============================")
+    print("USDA KEY EXISTS:", bool(key))
+    print("SEARCHING USDA:", food)
 
 
-    if not USDA_API_KEY:
-
-        print("ERROR: USDA KEY MISSING")
-
-        return None
-
+    url = "https://api.nal.usda.gov/fdc/v1/foods/search"
 
 
     params = {
-
-        "api_key": USDA_API_KEY,
-
+        "api_key": key,
         "query": food,
-
         "pageSize": 1
-
     }
 
 
-
-    try:
-
-
-        response = requests.get(
-            BASE_URL,
-            params=params,
-            timeout=10
-        )
+    response = requests.get(
+        url,
+        params=params,
+        timeout=10
+    )
 
 
-        print(
-            "USDA STATUS:",
-            response.status_code
-        )
+    print("STATUS:", response.status_code)
+
+    print(
+        "RAW RESPONSE:",
+        response.text[:500]
+    )
 
 
-        data = response.json()
-
-
-
-        print(
-            "USDA RESPONSE KEYS:",
-            data.keys()
-        )
-
-
-
-        foods = data.get(
-            "foods",
-            []
-        )
-
-
-
-        if not foods:
-
-            print(
-                "NO USDA FOOD FOUND:",
-                food
-            )
-
-            return None
-
-
-
-        food_item = foods[0]
-
-
-
-        print(
-            "USDA FOUND:",
-            food_item.get("description")
-        )
-
-
-
-        nutrients = {}
-
-
-
-        for nutrient in food_item.get(
-            "foodNutrients",
-            []
-        ):
-
-
-            name = nutrient.get(
-                "nutrientName",
-                ""
-            )
-
-
-            value = nutrient.get(
-                "value",
-                0
-            )
-
-
-            nutrients[name] = value
-
-
-
-        print(
-            "NUTRIENTS:",
-            nutrients
-        )
-
-
-
-        return {
-
-
-            "name":
-                food_item.get(
-                    "description"
-                ),
-
-
-            "nutrition":
-                nutrients
-
-        }
-
-
-
-    except Exception as e:
-
-
-        print(
-            "USDA ERROR:",
-            e
-        )
-
-
+    if response.status_code != 200:
         return None
+
+
+
+    data = response.json()
+
+
+    foods = data.get(
+        "foods",
+        []
+    )
+
+
+    if not foods:
+        print("NO FOOD FOUND")
+        return None
+
+
+
+    item = foods[0]
+
+
+    print(
+        "FOUND:",
+        item.get("description")
+    )
+
+
+    nutrients = {}
+
+
+    for n in item.get(
+        "foodNutrients",
+        []
+    ):
+
+        nutrients[
+            n.get("nutrientName")
+        ] = n.get(
+            "value"
+        )
+
+
+    print(
+        "NUTRIENTS:",
+        nutrients
+    )
+
+
+    return {
+
+        "nutrition": nutrients
+
+    }
