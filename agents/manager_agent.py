@@ -11,7 +11,156 @@ def divide_nutrition(total, people):
 
     return {
         key: round(value / people, 2)
-        for key, value in total.items()
+        for key, value in total.items()#################################################
+# RECIPE RANKING AGENT
+#################################################
+
+def recipe_rank_agent(recipes):
+
+
+    print(
+        "========== RECIPE RANK AGENT =========="
+    )
+
+
+    if not recipes:
+
+        return {
+
+            "Best Recipe": None,
+
+            "Ranked Recipes": []
+
+        }
+
+
+
+    ranked=[]
+
+
+
+    for recipe in recipes:
+
+
+        score=0
+
+
+        ingredients = recipe.get(
+            "Ingredients",
+            []
+        )
+
+
+        instructions = recipe.get(
+            "Instructions",
+            []
+        )
+
+
+        name = recipe.get(
+            "Recipe",
+            "Unknown"
+        )
+
+
+
+        #################################
+        # INGREDIENT SCORE
+        #################################
+
+        ingredient_count=len(
+            ingredients
+        )
+
+
+        if ingredient_count >= 10:
+
+            score += 30
+
+
+        elif ingredient_count >=5:
+
+            score +=20
+
+
+
+        #################################
+        # INSTRUCTION SCORE
+        #################################
+
+        instruction_count=len(
+            instructions
+        )
+
+
+        if instruction_count >=8:
+
+            score +=40
+
+
+        elif instruction_count >=3:
+
+            score +=20
+
+
+
+        #################################
+        # RECIPE QUALITY
+        #################################
+
+        if "poha" in name.lower():
+
+            score +=10
+
+
+        if "traditional" in name.lower():
+
+            score +=5
+
+
+
+        ranked.append(
+
+            {
+
+            "Recipe": name,
+
+            "Score": score,
+
+            "Ingredients Count": ingredient_count,
+
+            "Instruction Count": instruction_count
+
+            }
+
+        )
+
+
+
+    ranked.sort(
+
+        key=lambda x:x["Score"],
+
+        reverse=True
+
+    )
+
+
+
+    return {
+
+
+        "Best Recipe":
+
+            ranked[0]["Recipe"],
+
+
+
+        "Ranked Recipes":
+
+            ranked
+
+    }
     }
 
 
@@ -87,6 +236,7 @@ def manager_agent(food_name, people):
                     parsed
                 )
 
+from agents.recipe_rank_agent import recipe_rank_agent
 
         except Exception as e:
 
@@ -133,7 +283,30 @@ def manager_agent(food_name, people):
     # USE FIRST RECIPE FOR NUTRITION
     ###################################
 
-    selected_recipe = parsed_recipes[0]
+    ranking = recipe_rank_agent(
+    parsed_recipes
+)
+
+
+print(
+    "RANKING:",
+    ranking
+)
+
+
+best_recipe_name = ranking.get(
+    "Best Recipe"
+)
+
+
+
+selected_recipe = next(
+
+    recipe for recipe in parsed_recipes
+
+    if recipe.get("Recipe") == best_recipe_name
+
+)
 
 
 
