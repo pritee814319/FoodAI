@@ -106,7 +106,11 @@ def extract_nutrition(result):
 
         if "energy" in key:
 
-            nutrition["Calories (kcal)"] = value
+    # Ignore kJ values
+    if value > 1000:
+        value = value / 4.184
+
+    nutrition["Calories (kcal)"] = value
 
 
         elif "protein" in key:
@@ -302,7 +306,20 @@ def ingredient_agent(ingredients):
             total[key],
             2
         )
+# validate calories from macros
 
+macro_calories = (
+    total["Protein (g)"] * 4 +
+    total["Carbohydrates (g)"] * 4 +
+    total["Fat (g)"] * 9
+)
+
+if total["Calories (kcal)"] > macro_calories * 1.5:
+
+    total["Calories (kcal)"] = round(
+        macro_calories,
+        2
+    )
 
 
     print(
