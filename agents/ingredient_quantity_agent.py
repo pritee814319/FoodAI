@@ -2,7 +2,7 @@ import re
 
 
 #################################################
-# CONVERSION TABLE
+# UNIT CONVERSION TABLE
 #################################################
 
 UNIT_TO_GRAMS = {
@@ -10,42 +10,76 @@ UNIT_TO_GRAMS = {
     "cup": {
         "rice flakes": 100,
         "poha": 100,
-        "rice": 200,
-        "oil": 218,
         "peanuts": 146,
+        "vegetable oil": 218,
         "coconut": 80
     },
 
-    "tablespoon": {
-        "oil": 14,
-        "peanuts": 9,
-        "sugar": 12,
-        "coconut": 6
+    "cups": {
+        "rice flakes": 100,
+        "poha": 100,
+        "peanuts": 146,
+        "vegetable oil": 218,
+        "coconut": 80
     },
 
-    "tbsp": {
-        "oil": 14,
+
+    "tablespoon": {
+
+        "vegetable oil": 14,
         "peanuts": 9,
         "sugar": 12,
-        "coconut": 6
+        "coconut": 5
+
     },
+
+
+    "tablespoons": {
+
+        "vegetable oil": 14,
+        "peanuts": 9,
+        "sugar": 12,
+        "coconut": 5
+
+    },
+
+
+    "tbsp": {
+
+        "vegetable oil": 14,
+        "peanuts": 9,
+        "sugar": 12,
+        "coconut": 5
+
+    },
+
 
     "teaspoon": {
 
         "salt": 6,
         "sugar": 4,
-        "oil": 4,
         "mustard seeds": 2,
         "cumin": 2,
         "turmeric": 2
 
     },
 
+
+    "teaspoons": {
+
+        "salt": 6,
+        "sugar": 4,
+        "mustard seeds": 2,
+        "cumin": 2,
+        "turmeric": 2
+
+    },
+
+
     "tsp": {
 
         "salt": 6,
         "sugar": 4,
-        "oil": 4,
         "mustard seeds": 2,
         "cumin": 2,
         "turmeric": 2
@@ -55,6 +89,8 @@ UNIT_TO_GRAMS = {
 }
 
 
+
+
 #################################################
 # FOOD NORMALIZATION
 #################################################
@@ -62,56 +98,60 @@ UNIT_TO_GRAMS = {
 FOOD_MAP = {
 
     "poha": "rice flakes",
-    "beaten rice": "rice flakes",
+
     "flattened rice": "rice flakes",
 
+    "beaten rice": "rice flakes",
+
+    "rice flakes": "rice flakes",
+
+
     "peanut": "peanuts",
+
     "peanuts": "peanuts",
 
-    "onion": "onion",
+
+    "oil": "vegetable oil",
+
+    "vegetable oil": "vegetable oil",
+
+
+    "mustard": "mustard seeds",
+
+    "mustard seeds": "mustard seeds",
+
+
+    "cumin": "cumin",
+
+    "jeera": "cumin",
+
+    "cumin seeds": "cumin",
+
 
     "potato": "potato",
 
-    "oil": "oil",
+    "onion": "onion",
 
-    "mustard": "mustard seeds",
-    "mustard seeds": "mustard seeds",
-
-    "cumin": "cumin",
-    "jeera": "cumin",
-
-    "hing": "asafoetida",
 
     "turmeric": "turmeric",
 
     "salt": "salt",
 
-    "sugar": "sugar",
-
-    "coconut": "coconut",
-
-    "lemon": "lemon",
-
-    "curry leaves": "curry leaves",
-
-    "coriander": "coriander",
-
-    "cilantro": "coriander"
+    "sugar": "sugar"
 
 }
 
 
 
+
 #################################################
-# FRACTION HANDLER
+# FRACTION CONVERSION
 #################################################
 
 def convert_fraction(value):
 
-    value=value.strip()
 
-
-    fractions={
+    fractions = {
 
         "½":0.5,
         "¼":0.25,
@@ -122,38 +162,37 @@ def convert_fraction(value):
     }
 
 
-    total=0
+    number = 0
 
 
-    for symbol,num in fractions.items():
+    for symbol,amount in fractions.items():
 
         if symbol in value:
 
-            total += num
+            number += amount
 
-            value=value.replace(
-                symbol,
-                ""
-            )
+            value=value.replace(symbol,"")
+
 
 
     try:
 
-        if value.strip():
-
-            total += float(value)
+        number += float(value)
 
     except:
 
         pass
 
 
-    if total==0:
 
-        return 1
+    if number == 0:
+
+        number = 1
 
 
-    return total
+
+    return number
+
 
 
 
@@ -169,22 +208,17 @@ def parse_ingredient(text):
         return None
 
 
+
     original=text.lower()
-
-
-
-    # skip unknown amounts
-
-    if "as needed" in original or "as required" in original:
-
-        return None
 
 
 
     food=None
 
 
+
     for key in FOOD_MAP:
+
 
         if key in original:
 
@@ -200,56 +234,46 @@ def parse_ingredient(text):
 
 
 
-    #################################
+
     # quantity
-    #################################
 
-    quantity=1
-
-
-
-    quantity_match=re.search(
-
-        r"(\d*\s*[½¼¾⅓⅔]|\d+)",
-
+    match=re.search(
+        r"(\d+\.?\d*\s*[½¼¾⅓⅔]?)",
         original
-
     )
 
 
-    if quantity_match:
+    if match:
 
         quantity=convert_fraction(
-            quantity_match.group(1)
+            match.group(1)
         )
 
+    else:
+
+        quantity=1
 
 
-    #################################
-    # unit
-    #################################
+
+
 
     unit="piece"
 
 
 
-    units=[
+    for u in [
 
         "cups",
         "cup",
-
         "tablespoons",
         "tablespoon",
         "tbsp",
-
         "teaspoons",
         "teaspoon",
         "tsp"
 
-    ]
+    ]:
 
-
-    for u in units:
 
         if u in original:
 
@@ -259,29 +283,21 @@ def parse_ingredient(text):
 
 
 
-    #################################
-    # grams
-    #################################
+
 
     grams=0
 
 
 
-    normalized_unit=unit.rstrip("s")
+    if unit in UNIT_TO_GRAMS:
 
 
-
-    if normalized_unit in UNIT_TO_GRAMS:
-
-
-        table=UNIT_TO_GRAMS[
-            normalized_unit
-        ]
-
-
-        grams = quantity * table.get(
-            food,
-            10
+        grams = (
+            quantity *
+            UNIT_TO_GRAMS[unit].get(
+                food,
+                10
+            )
         )
 
 
@@ -289,33 +305,30 @@ def parse_ingredient(text):
     else:
 
 
-        piece_weight={
+        piece_weights={
 
             "potato":150,
 
             "onion":110,
 
-            "lemon":50,
-
-            "curry leaves":5,
-
-            "coriander":5,
-
-            "asafoetida":1
+            "lemon":50
 
         }
 
 
         grams = (
 
-            piece_weight.get(
+            piece_weights.get(
                 food,
-                10
+                5
             )
+
             *
+
             quantity
 
         )
+
 
 
 
@@ -334,6 +347,7 @@ def parse_ingredient(text):
 
 
 
+
 #################################################
 # MAIN AGENT
 #################################################
@@ -341,35 +355,37 @@ def parse_ingredient(text):
 def ingredient_quantity_agent(ingredients):
 
 
-    result=[]
+    print(
+        "========== QUANTITY AGENT =========="
+    )
 
 
     print(
-        "QUANTITY INPUT:",
+        "INPUT:",
         ingredients
     )
+
+
+    output=[]
+
 
 
     for item in ingredients:
 
 
-        parsed=parse_ingredient(
-            item
-        )
+        result=parse_ingredient(item)
 
 
-        if parsed:
+        if result:
 
-            result.append(
-                parsed
-            )
+            output.append(result)
 
 
 
     print(
-        "QUANTITY OUTPUT:",
-        result
+        "OUTPUT:",
+        output
     )
 
 
-    return result
+    return output
