@@ -1,7 +1,6 @@
 from api.usda_client import search_usda_food
 
 
-
 #################################################
 # FOOD NORMALIZATION
 #################################################
@@ -46,8 +45,6 @@ FOOD_MAPPING = {
 
 
 
-
-
 #################################################
 # USDA NUTRITION EXTRACTION
 #################################################
@@ -72,7 +69,6 @@ def extract_nutrition(result):
         "Sodium (mg)":0
 
     }
-
 
 
     if not result:
@@ -106,11 +102,16 @@ def extract_nutrition(result):
 
         if "energy" in key:
 
-    # Ignore kJ values
-    if value > 1000:
-        value = value / 4.184
 
-    nutrition["Calories (kcal)"] = value
+            # Convert kJ to kcal
+
+            if value > 1000:
+
+                value = value / 4.184
+
+
+            nutrition["Calories (kcal)"] = value
+
 
 
         elif "protein" in key:
@@ -118,9 +119,11 @@ def extract_nutrition(result):
             nutrition["Protein (g)"] = value
 
 
+
         elif "carbohydrate" in key:
 
             nutrition["Carbohydrates (g)"] = value
+
 
 
         elif "fat" in key or "lipid" in key:
@@ -128,14 +131,17 @@ def extract_nutrition(result):
             nutrition["Fat (g)"] = value
 
 
+
         elif "fiber" in key:
 
             nutrition["Fiber (g)"] = value
 
 
+
         elif "sugar" in key:
 
             nutrition["Sugar (g)"] = value
+
 
 
         elif "sodium" in key:
@@ -217,6 +223,9 @@ def ingredient_agent(ingredients):
 
 
 
+            # Skip salt and sugar because recipe quantity
+            # usually represents taste amount
+
             if name in [
                 "salt",
                 "sugar"
@@ -254,7 +263,6 @@ def ingredient_agent(ingredients):
 
 
 
-            # DEBUG
             print(
                 "USDA PER 100G:",
                 search_name,
@@ -299,6 +307,10 @@ def ingredient_agent(ingredients):
 
 
 
+    #################################################
+    # ROUND VALUES
+    #################################################
+
     for key in total:
 
 
@@ -306,20 +318,49 @@ def ingredient_agent(ingredients):
             total[key],
             2
         )
-# validate calories from macros
 
-macro_calories = (
-    total["Protein (g)"] * 4 +
-    total["Carbohydrates (g)"] * 4 +
-    total["Fat (g)"] * 9
-)
 
-if total["Calories (kcal)"] > macro_calories * 1.5:
 
-    total["Calories (kcal)"] = round(
-        macro_calories,
-        2
+    #################################################
+    # CALORIE VALIDATION
+    #################################################
+
+    macro_calories = (
+
+        total["Protein (g)"] * 4
+
+        +
+
+        total["Carbohydrates (g)"] * 4
+
+        +
+
+        total["Fat (g)"] * 9
+
     )
+
+
+
+    if (
+        total["Calories (kcal)"]
+        >
+        macro_calories * 1.5
+    ):
+
+
+        print(
+            "Calories corrected:",
+            total["Calories (kcal)"],
+            "→",
+            macro_calories
+        )
+
+
+        total["Calories (kcal)"] = round(
+            macro_calories,
+            2
+        )
+
 
 
     print(
@@ -335,7 +376,9 @@ if total["Calories (kcal)"] > macro_calories * 1.5:
 
     return {
 
+
         "Ingredients Used": used,
+
 
         "Total Nutrition": total
 
