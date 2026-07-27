@@ -1,183 +1,65 @@
 from api.usda_client import search_usda_food
-import re
-
-
-#################################################
-# INGREDIENT NORMALIZATION
-#################################################
-
-REMOVE_WORDS = [
-    "chopped",
-    "finely chopped",
-    "roughly chopped",
-    "sliced",
-    "diced",
-    "minced",
-    "crushed",
-    "grated",
-    "fresh",
-    "optional",
-    "to taste",
-    "as needed",
-    "divided",
-    "small",
-    "medium",
-    "large"
-]
-
-
-UNITS = [
-    "cup",
-    "cups",
-    "tbsp",
-    "tablespoon",
-    "tablespoons",
-    "tsp",
-    "teaspoon",
-    "teaspoons",
-    "gram",
-    "grams",
-    "kg",
-    "ml",
-    "oz",
-    "lb"
-]
-
-
-
-def normalize_ingredient(text):
-
-    if not isinstance(text, str):
-        return None
-
-
-    text = text.lower()
-
-
-    # special Indian ingredient mapping
-
-    replacements = {
-
-        "poha": "rice",
-
-        "beaten rice flakes": "rice",
-
-        "flattened rice": "rice",
-
-        "hing": "asafoetida",
-
-        "jeera": "cumin",
-
-        "dhania": "coriander",
-
-        "curry leaves": "curry leaf"
-
-    }
-
-
-    for old,new in replacements.items():
-
-        text=text.replace(
-            old,
-            new
-        )
-
-
-
-    # remove quantity
-
-    text=re.sub(
-        r"\d+[/\d]*",
-        "",
-        text
-    )
-
-
-    # remove fractions
-
-    text=re.sub(
-        r"[¼½¾]",
-        "",
-        text
-    )
-
-
-    # remove units
-
-    for unit in UNITS:
-
-        text=text.replace(
-            unit,
-            ""
-        )
-
-
-
-    # remove words
-
-    for word in REMOVE_WORDS:
-
-        text=text.replace(
-            word,
-            ""
-        )
-
-
-
-    # remove brackets
-
-    text=re.sub(
-        r"\(.*?\)",
-        "",
-        text
-    )
-
-
-    # remove symbols
-
-    text=re.sub(
-        "[^a-zA-Z ]",
-        "",
-        text
-    )
-
-
-    text=" ".join(
-        text.split()
-    )
-
-
-    if len(text)<3:
-
-        return None
-
-
-    return text
-
-
 
 
 
 #################################################
-# USDA EXTRACTION DEBUG VERSION
+# FOOD NORMALIZATION
+#################################################
+
+FOOD_MAPPING = {
+
+    "poha": "rice flakes",
+
+    "beaten rice": "rice flakes",
+
+    "flattened rice": "rice flakes",
+
+    "vegetable oil": "oil",
+
+    "peanut": "peanuts",
+
+    "peanuts": "peanuts",
+
+    "jeera": "cumin",
+
+    "cumin seeds": "cumin",
+
+    "mustard": "mustard seeds",
+
+    "coriander leaves": "cilantro",
+
+    "green chilli": "green pepper",
+
+    "chilli": "green pepper",
+
+    "hing": "asafoetida"
+
+}
+
+
+
+#################################################
+# USDA NUTRITION EXTRACTION
 #################################################
 
 def extract_nutrition(result):
 
 
-    print("USDA RAW RESPONSE:")
-    print(result)
+    nutrition = {
 
-
-
-    nutrition={
 
         "Calories (kcal)":0,
+
         "Protein (g)":0,
+
         "Carbohydrates (g)":0,
+
         "Fat (g)":0,
+
         "Fiber (g)":0,
+
         "Sugar (g)":0,
+
         "Sodium (mg)":0
 
     }
@@ -190,24 +72,17 @@ def extract_nutrition(result):
 
 
 
-    # check different possible formats
-
-    data=result.get(
+    data = result.get(
         "nutrition",
         {}
     )
-
-
-    if not data:
-
-        return nutrition
 
 
 
     for key,value in data.items():
 
 
-        key=key.lower()
+        key = key.lower()
 
 
         try:
@@ -222,37 +97,43 @@ def extract_nutrition(result):
 
         if "energy" in key:
 
-            nutrition["Calories (kcal)"]=value
+            nutrition["Calories (kcal)"] = value
+
 
 
         elif "protein" in key:
 
-            nutrition["Protein (g)"]=value
+            nutrition["Protein (g)"] = value
+
 
 
         elif "carbohydrate" in key:
 
-            nutrition["Carbohydrates (g)"]=value
+            nutrition["Carbohydrates (g)"] = value
+
 
 
         elif "fat" in key or "lipid" in key:
 
-            nutrition["Fat (g)"]=value
+            nutrition["Fat (g)"] = value
+
 
 
         elif "fiber" in key:
 
-            nutrition["Fiber (g)"]=value
+            nutrition["Fiber (g)"] = value
+
 
 
         elif "sugar" in key:
 
-            nutrition["Sugar (g)"]=value
+            nutrition["Sugar (g)"] = value
+
 
 
         elif "sodium" in key:
 
-            nutrition["Sodium (mg)"]=value
+            nutrition["Sodium (mg)"] = value
 
 
 
@@ -263,52 +144,39 @@ def extract_nutrition(result):
 
 
 #################################################
-# MAIN AGENT
+# MAIN INGREDIENT AGENT
 #################################################
 
 def ingredient_agent(ingredients):
 
 
-    print("\n========== INGREDIENT AGENT ==========")
-
-
-    cleaned=[]
-
-    seen=set()
-
-
-
-    for item in ingredients:
-
-
-        name=normalize_ingredient(
-            item
-        )
-
-
-        if name and name not in seen:
-
-            seen.add(name)
-
-            cleaned.append(name)
-
+    print(
+        "========== INGREDIENT AGENT =========="
+    )
 
 
     print(
-        "CLEAN INGREDIENTS:",
-        cleaned
+        "INPUT:",
+        ingredients
     )
 
 
 
-    total={
+    total = {
+
 
         "Calories (kcal)":0,
+
         "Protein (g)":0,
+
         "Carbohydrates (g)":0,
+
         "Fat (g)":0,
+
         "Fiber (g)":0,
+
         "Sugar (g)":0,
+
         "Sodium (mg)":0
 
     }
@@ -319,54 +187,97 @@ def ingredient_agent(ingredients):
 
 
 
-    for ingredient in cleaned:
 
 
-        print(
-            "\nSEARCH USDA:",
-            ingredient
-        )
+    #################################################
+    # PROCESS QUANTITY OUTPUT
+    #################################################
+
+    for item in ingredients:
 
 
         try:
 
 
-            result=search_usda_food(
-                ingredient
+            name = item.get(
+                "name"
             )
 
 
-            nutrition=extract_nutrition(
-                result
-            )
-
-
-            print(
-                "NUTRITION FOUND:",
-                nutrition
+            grams = item.get(
+                "grams",
+                100
             )
 
 
 
-            if nutrition["Calories (kcal)"]==0:
-
-                print(
-                    "SKIPPED:",
-                    ingredient
-                )
+            if not name:
 
                 continue
 
 
 
-            used.append(
-                ingredient
+            # ignore salt/sugar as direct sodium/calorie source
+
+            if name in [
+                "salt",
+                "sugar"
+            ]:
+
+                continue
+
+
+
+
+            search_name = FOOD_MAPPING.get(
+                name,
+                name
             )
+
+
+
+            print(
+                "USDA SEARCH:",
+                search_name,
+                grams,
+                "grams"
+            )
+
+
+
+            result = search_usda_food(
+                search_name
+            )
+
+
+
+            per100 = extract_nutrition(
+                result
+            )
+
+
+
+            multiplier = grams / 100
+
 
 
             for key in total:
 
-                total[key]+=nutrition[key]
+
+                total[key] += (
+                    per100[key]
+                    *
+                    multiplier
+                )
+
+
+
+            used.append(
+                {
+                    "ingredient": search_name,
+                    "grams": grams
+                }
+            )
 
 
 
@@ -374,41 +285,45 @@ def ingredient_agent(ingredients):
 
 
             print(
-                "ERROR:",
-                ingredient,
+                "INGREDIENT ERROR:",
                 e
             )
 
 
 
+
+
+    #################################################
+    # ROUND
+    #################################################
+
     for key in total:
 
-        total[key]=round(
+
+        total[key] = round(
             total[key],
             2
         )
 
 
+
     print(
-        "\nUSED INGREDIENTS:",
-        used
+        "========== FINAL USDA NUTRITION =========="
     )
 
 
     print(
-        "FINAL TOTAL:",
         total
     )
+
 
 
     return {
 
 
-        "Ingredients Used":
-        used,
+        "Ingredients Used": used,
 
 
-        "Total Nutrition":
-        total
+        "Total Nutrition": total
 
     }
