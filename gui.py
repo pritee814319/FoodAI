@@ -45,9 +45,7 @@ if analyze:
 
     else:
 
-        with st.spinner(
-            "Analyzing food..."
-        ):
+        with st.spinner("Analyzing food..."):
 
             try:
 
@@ -56,7 +54,6 @@ if analyze:
                     people=people
                 )
 
-
             except Exception as e:
 
                 st.error(
@@ -64,7 +61,6 @@ if analyze:
                 )
 
                 st.stop()
-
 
 
         st.success(
@@ -78,23 +74,6 @@ if analyze:
 
     st.subheader("🍽 Food Image")
 
-    image_data = result.get(
-        "food_image"
-    )
-
-    if image_data:
-
-        st.image(
-            image_data["image_url"],
-            use_container_width=True
-        )
-
-        st.caption(
-            "Image credit: " + image_data["credit"]
-        )
-
-    else:
-
         image_url = food_image_agent(food)
 
         if image_url:
@@ -106,7 +85,8 @@ if analyze:
             )
 
             st.caption(
-                "Image credit: " + image_url["credit"]
+                "Image credit: "
+                + image_url["credit"]
             )
 
         else:
@@ -115,7 +95,6 @@ if analyze:
                 "Food image not available"
             )
 
-
     # ---------------------------------------------------
     # Nutrition
     # ---------------------------------------------------
@@ -123,16 +102,7 @@ if analyze:
     nutrition = result.get(
         "nutrition",
         {}
-    )       
-
-        # -------------------------------
-        # NUTRITION
-        # -------------------------------
-
-        nutrition = result.get(
-            "nutrition",
-            {}
-        )
+    )
 
 
         total = nutrition.get(
