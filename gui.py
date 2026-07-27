@@ -72,71 +72,41 @@ if analyze:
         )
 
 
+# ---------------------------------------------------
+# Food Image
+# ---------------------------------------------------
 
-        # -------------------------------
-        # FOOD IMAGE
-        # -------------------------------
-
-        st.subheader(
-            "🍽 Food Image"
-        )
+st.subheader("🍽 Food Image")
 
 
-        image_data = result.get(
-            "food_image"
-        )
+image_data = result.get(
+    "food_image"
+)
 
 
-        if image_data:
+if image_data:
 
 
-            st.image(
-                image_data["image_url"],
-                use_container_width=True
-            )
+    st.image(
+        image_data["image_url"],
+        caption=food.title(),
+        use_container_width=True
+    )
 
 
-            st.caption(
-                "Image credit: "
-                +
-                image_data.get(
-                    "credit",
-                    ""
-                )
-            )
+    st.caption(
+        "Image credit: "
+        +
+        image_data["credit"]
+    )
 
 
-        else:
+else:
 
-            try:
-
-                image_url = food_image_agent(
-                    food
-                )
-
-
-                if image_url:
-
-                    st.image(
-                        image_url,
-                        caption=food.title(),
-                        use_container_width=True
-                    )
-
-                else:
-
-                    st.info(
-                        "Food image not available"
-                    )
-
-
-            except Exception:
-
-                st.info(
-                    "Food image not available"
-                )
-
-
+    st.write(
+        "Food image not available"
+    )
+       
 
         # -------------------------------
         # NUTRITION
