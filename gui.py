@@ -77,6 +77,35 @@ if analyze and food:
 
     st.subheader("🍽 Food Image")
 
+
+image_data = result.get(
+    "food_image"
+)
+
+
+if image_data:
+
+
+    st.image(
+        image_data["image_url"],
+        use_container_width=True
+    )
+
+
+    st.caption(
+        "Image credit: "
+        +
+        image_data["credit"]
+    )
+
+
+else:
+
+
+    st.write(
+        "Food image not available"
+    )
+
     try:
 
         image_url = food_image_agent(food)
