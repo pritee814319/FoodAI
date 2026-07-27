@@ -8,33 +8,43 @@ from api.usda_client import search_usda_food
 
 FOOD_MAPPING = {
 
-    "poha": "rice flakes",
+    "poha": "Rice, white, raw",
 
-    "beaten rice": "rice flakes",
+    "rice flakes": "Rice, white, raw",
 
-    "flattened rice": "rice flakes",
+    "beaten rice": "Rice, white, raw",
 
-    "vegetable oil": "oil",
+    "flattened rice": "Rice, white, raw",
 
-    "peanut": "peanuts",
+    "vegetable oil": "Vegetable oil",
 
-    "peanuts": "peanuts",
+    "oil": "Vegetable oil",
 
-    "jeera": "cumin",
+    "peanut": "Peanuts, all types, raw",
 
-    "cumin seeds": "cumin",
+    "peanuts": "Peanuts, all types, raw",
 
-    "mustard": "mustard seeds",
+    "jeera": "Cumin seed",
 
-    "coriander leaves": "cilantro",
+    "cumin": "Cumin seed",
 
-    "green chilli": "green pepper",
+    "cumin seeds": "Cumin seed",
 
-    "chilli": "green pepper",
+    "mustard": "Mustard seed",
 
-    "hing": "asafoetida"
+    "mustard seeds": "Mustard seed",
+
+    "coriander leaves": "Cilantro",
+
+    "green chilli": "Green pepper",
+
+    "chilli": "Green pepper",
+
+    "hing": "Asafoetida"
 
 }
+
+
 
 
 
@@ -46,7 +56,6 @@ def extract_nutrition(result):
 
 
     nutrition = {
-
 
         "Calories (kcal)":0,
 
@@ -100,11 +109,9 @@ def extract_nutrition(result):
             nutrition["Calories (kcal)"] = value
 
 
-
         elif "protein" in key:
 
             nutrition["Protein (g)"] = value
-
 
 
         elif "carbohydrate" in key:
@@ -112,11 +119,9 @@ def extract_nutrition(result):
             nutrition["Carbohydrates (g)"] = value
 
 
-
         elif "fat" in key or "lipid" in key:
 
             nutrition["Fat (g)"] = value
-
 
 
         elif "fiber" in key:
@@ -124,11 +129,9 @@ def extract_nutrition(result):
             nutrition["Fiber (g)"] = value
 
 
-
         elif "sugar" in key:
 
             nutrition["Sugar (g)"] = value
-
 
 
         elif "sodium" in key:
@@ -164,7 +167,6 @@ def ingredient_agent(ingredients):
 
     total = {
 
-
         "Calories (kcal)":0,
 
         "Protein (g)":0,
@@ -186,12 +188,6 @@ def ingredient_agent(ingredients):
     used=[]
 
 
-
-
-
-    #################################################
-    # PROCESS QUANTITY OUTPUT
-    #################################################
 
     for item in ingredients:
 
@@ -217,15 +213,12 @@ def ingredient_agent(ingredients):
 
 
 
-            # ignore salt/sugar as direct sodium/calorie source
-
             if name in [
                 "salt",
                 "sugar"
             ]:
 
                 continue
-
 
 
 
@@ -253,6 +246,15 @@ def ingredient_agent(ingredients):
 
             per100 = extract_nutrition(
                 result
+            )
+
+
+
+            # DEBUG
+            print(
+                "USDA PER 100G:",
+                search_name,
+                per100
             )
 
 
@@ -293,10 +295,6 @@ def ingredient_agent(ingredients):
 
 
 
-    #################################################
-    # ROUND
-    #################################################
-
     for key in total:
 
 
@@ -320,9 +318,7 @@ def ingredient_agent(ingredients):
 
     return {
 
-
         "Ingredients Used": used,
-
 
         "Total Nutrition": total
 
