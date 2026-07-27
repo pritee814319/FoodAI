@@ -16,13 +16,13 @@ FOOD_MAPPING = {
 
     "flattened rice": "Rice, white, raw",
 
-    "vegetable oil": "Vegetable oil",
+    "vegetable oil": "Oil, vegetable, industrial, canola",
 
-    "oil": "Vegetable oil",
+    "oil": "Oil, vegetable, industrial, canola",
 
-    "peanut": "Peanuts, all types, raw",
+    "peanut": "Peanuts, all types, roasted",
 
-    "peanuts": "Peanuts, all types, raw",
+    "peanuts": "Peanuts, all types, roasted",
 
     "jeera": "Cumin seed",
 
