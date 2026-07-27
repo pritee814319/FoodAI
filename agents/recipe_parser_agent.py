@@ -5,6 +5,12 @@ import json
 
 def recipe_parser_agent(url):
 
+    print("PARSER URL:", url)
+
+    ingredients = []
+    instructions = []
+
+
     try:
 
         headers = {
@@ -15,7 +21,7 @@ def recipe_parser_agent(url):
         response = requests.get(
             url,
             headers=headers,
-            timeout=10
+            timeout=15
         )
 
 
@@ -25,12 +31,6 @@ def recipe_parser_agent(url):
         )
 
 
-        ingredients = []
-        instructions = []
-
-
-        # Extract JSON-LD recipe data
-
         scripts = soup.find_all(
             "script",
             type="application/ld+json"
@@ -38,6 +38,7 @@ def recipe_parser_agent(url):
 
 
         for script in scripts:
+
 
             try:
 
@@ -50,23 +51,34 @@ def recipe_parser_agent(url):
                 )
 
 
-                if isinstance(data, list):
+                items=[]
 
-                    items = data
 
-                else:
+                if isinstance(data,list):
+                    items=data
 
-                    items = [data]
+                elif isinstance(data,dict):
+
+                    if "@graph" in data:
+
+                        items=data["@graph"]
+
+                    else:
+
+                        items=[data]
+
 
 
                 for item in items:
 
-                    if not isinstance(item, dict):
+
+                    if not isinstance(item,dict):
                         continue
 
 
-                    recipe_type = str(
-                        item.get("@type", "")
+
+                    recipe_type=str(
+                        item.get("@type","")
                     )
 
 
@@ -74,131 +86,111 @@ def recipe_parser_agent(url):
                         continue
 
 
-                    ingredients = item.get(
+
+                    print("FOUND RECIPE JSON")
+
+
+
+                    # INGREDIENTS
+
+                    ing=item.get(
                         "recipeIngredient",
                         []
                     )
 
 
-                    raw_steps = item.get(
+                    if ing:
+
+                        ingredients.extend(
+                            ing
+                        )
+
+
+
+                    # INSTRUCTIONS
+
+                    steps=item.get(
                         "recipeInstructions",
                         []
                     )
 
 
-                    for step in raw_steps:
-
-                        if isinstance(step, dict):
-
-                            text = step.get(
-                                "text",
-                                ""
-                            )
-
-                            if text:
-                                instructions.append(text)
+                    if isinstance(steps,list):
 
 
-                        elif isinstance(step, str):
+                        for step in steps:
 
-                            instructions.append(step)
+
+                            if isinstance(step,dict):
+
+                                text=step.get(
+                                    "text",
+                                    ""
+                                )
+
+
+                                if text:
+                                    instructions.append(text)
+
+
+                            elif isinstance(step,str):
+
+                                instructions.append(step)
 
 
 
             except Exception as e:
 
                 print(
-                    "JSON-LD error:",
+                    "JSON ERROR:",
                     e
                 )
 
 
 
-        # Clean ingredients
+        # remove duplicates
 
-        clean_ingredients = []
-
-
-        for item in ingredients:
-
-            if not isinstance(item, str):
-                continue
+        ingredients=list(
+            dict.fromkeys(
+                ingredients
+            )
+        )
 
 
-            item = item.strip()
-
-
-            if len(item) < 3:
-                continue
-
-
-            clean_ingredients.append(item)
-
-
-
-        ingredients = list(
-            dict.fromkeys(clean_ingredients)
+        instructions=list(
+            dict.fromkeys(
+                instructions
+            )
         )
 
 
 
-        # Clean instructions
-
-        clean_instructions = []
-
-
-        for step in instructions:
-
-            if not isinstance(step, str):
-                continue
-
-
-            step = step.strip()
-
-
-            if len(step) < 5:
-                continue
-
-
-            clean_instructions.append(step)
-
-
-
-        instructions = list(
-            dict.fromkeys(clean_instructions)
+        print(
+            "INGREDIENTS FOUND:",
+            len(ingredients)
         )
 
 
-
-        # Ignore bad recipes
-
-        if len(ingredients) < 5:
-
-            return {
-                "Ingredients": [],
-                "Instructions": [],
-                "URL": url
-            }
-
-
-
-        if len(instructions) < 3:
-
-            return {
-                "Ingredients": [],
-                "Instructions": [],
-                "URL": url
-            }
+        print(
+            "INSTRUCTIONS FOUND:",
+            len(instructions)
+        )
 
 
 
         return {
 
-            "Ingredients": ingredients[:30],
 
-            "Instructions": instructions[:30],
+            "Recipe": "",
 
-            "URL": url
+
+            "URL": url,
+
+
+            "Ingredients": ingredients[:40],
+
+
+            "Instructions": instructions[:40]
 
         }
 
@@ -206,18 +198,25 @@ def recipe_parser_agent(url):
 
     except Exception as e:
 
+
         print(
-            "Parser error:",
+            "PARSER ERROR:",
             e
         )
 
 
         return {
 
+
+            "Recipe": "",
+
+
+            "URL": url,
+
+
             "Ingredients": [],
 
-            "Instructions": [],
 
-            "URL": url
+            "Instructions": []
 
         }
