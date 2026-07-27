@@ -5,13 +5,11 @@ import streamlit as st
 def food_image_agent(food_name):
 
     print("========== FOOD IMAGE AGENT ==========")
-
     print("SEARCH IMAGE:", food_name)
 
 
     try:
 
-        # Streamlit Cloud Secrets
         api_key = st.secrets.get(
             "UNSPLASH_ACCESS_KEY"
         )
@@ -31,8 +29,7 @@ def food_image_agent(food_name):
 
         params = {
 
-            "query": food_name + " food",
-
+            "query": f"{food_name} food",
             "per_page": 1
 
         }
@@ -62,10 +59,11 @@ def food_image_agent(food_name):
 
         data = response.json()
 
-print(
-    "UNSPLASH RESPONSE:",
-    data
-)
+
+        print(
+            "UNSPLASH RESPONSE:",
+            data
+        )
 
 
         if data.get("results"):
@@ -74,7 +72,7 @@ print(
             image = data["results"][0]
 
 
-            result = {
+            return {
 
                 "image_url":
                     image["urls"]["regular"],
@@ -83,21 +81,6 @@ print(
                     image["user"]["name"]
 
             }
-
-
-            print(
-                "IMAGE FOUND:",
-                result
-            )
-
-
-            return result
-
-
-
-        print(
-            "NO IMAGE FOUND"
-        )
 
 
         return None
@@ -111,6 +94,5 @@ print(
             "IMAGE ERROR:",
             e
         )
-
 
         return None
