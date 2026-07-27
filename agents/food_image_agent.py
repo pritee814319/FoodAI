@@ -15,31 +15,33 @@ def food_image_agent(food_name):
         )
 
 
+        print(
+            "API KEY FOUND:",
+            bool(api_key)
+        )
+
+
         if not api_key:
 
             print(
-                "Unsplash API key missing"
+                "Missing Unsplash API Key"
             )
 
             return None
+
 
 
         url = "https://api.unsplash.com/search/photos"
 
 
         params = {
-
-            "query": f"{food_name} food",
+            "query": food_name + " dish food",
             "per_page": 1
-
         }
 
 
         headers = {
-
-            "Authorization":
-            f"Client-ID {api_key}"
-
+            "Authorization": f"Client-ID {api_key}"
         }
 
 
@@ -52,43 +54,54 @@ def food_image_agent(food_name):
 
 
         print(
-            "UNSPLASH STATUS:",
+            "STATUS:",
             response.status_code
+        )
+
+
+        print(
+            "RAW RESPONSE:",
+            response.text[:500]
         )
 
 
         data = response.json()
 
 
-        print(
-            "UNSPLASH RESPONSE:",
-            data
-        )
 
-
-        if data.get("results"):
+        if "results" in data and len(data["results"]) > 0:
 
 
             image = data["results"][0]
 
 
+            print(
+                "IMAGE FOUND:",
+                image["urls"]["regular"]
+            )
+
+
             return {
 
-                "image_url":
-                    image["urls"]["regular"],
+                "image_url": image["urls"]["regular"],
 
-                "credit":
-                    image["user"]["name"]
+                "credit": image["user"]["name"]
 
             }
 
 
-        return None
+        else:
+
+            print(
+                "NO IMAGE RESULTS"
+            )
+
+
+            return None
 
 
 
     except Exception as e:
-
 
         print(
             "IMAGE ERROR:",
