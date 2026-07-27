@@ -152,8 +152,11 @@ print("TOTAL INGREDIENT COUNT:", len(ingredients))
 
 
     nutrition_result = ingredient_agent(
-        ingredients
-    )
+    ingredients
+)
+
+print("========== NUTRITION RESULT ==========")
+print(nutrition_result)
 
 
 
