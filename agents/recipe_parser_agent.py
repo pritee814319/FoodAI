@@ -5,8 +5,14 @@ import json
 
 def recipe_parser_agent(url):
 
-    try:
+  
+try:
 
+    something()
+
+except Exception as e:
+
+    print(e)
         headers = {
             "User-Agent": "Mozilla/5.0"
         }
@@ -41,8 +47,13 @@ def recipe_parser_agent(url):
 
         for script in scripts:
 
-            try:
+          try:
 
+    something()
+
+except Exception as e:
+
+    print(e)
                 if not script.string:
                     continue
 
