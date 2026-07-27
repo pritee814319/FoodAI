@@ -346,43 +346,38 @@ def recipe_parser_agent(url):
         )
 
 
+if len(ingredients) < 5:
 
-        return {
+    return {
 
+        "Ingredients": [],
 
-            "Ingredients":
+        "Instructions": [],
 
-                ingredients[:30],
+        "URL": url
 
-
-            "Instructions":
-
-                instructions[:20],
-
-
-            "URL":
-
-                url
-
-        }
+    }
 
 
+if len(instructions) < 3:
 
-    except Exception as e:
+    return {
+
+        "Ingredients": [],
+
+        "Instructions": [],
+
+        "URL": url
+
+    }
 
 
-        print(
-            "PARSER ERROR:",
-            e
-        )
+return {
 
+    "Ingredients": ingredients[:30],
 
-        return {
+    "Instructions": instructions[:30],
 
-            "Ingredients":[],
+    "URL": url
 
-            "Instructions":[],
-
-            "URL":url
-
-        }
+}
