@@ -1,3 +1,4 @@
+from agents.food_image_agent import food_image_agent
 from agents.recipe_search import recipe_search_agent
 from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_quantity_agent import ingredient_quantity_agent
@@ -260,49 +261,49 @@ def manager_agent(food_name, people):
 
     return {
 
+    "query": food_name,
 
-        "query": food_name,
-
-
-        "servings": people,
+    "servings": people,
 
 
-        "recommended_recipe":
+    "food_image":
 
-            ranking.get(
-                "Best Recipe"
-            ),
+        image_result,
 
 
-        "recipe_ranking":
+    "recommended_recipe":
 
-            ranking.get(
-                "Ranked Recipes"
-            ),
-
-
-        "recipes":
-
-            parsed_recipes,
+        ranking.get(
+            "Best Recipe"
+        ),
 
 
+    "recipe_ranking":
 
-        "nutrition": {
+        ranking.get(
+            "Ranked Recipes"
+        ),
 
 
-            "Total Recipe Nutrition":
+    "recipes":
 
+        parsed_recipes,
+
+
+    "nutrition": {
+
+        "Total Recipe Nutrition":
+
+            total,
+
+
+        "Nutrition Per Person":
+
+            divide_nutrition(
                 total,
-
-
-
-            "Nutrition Per Person":
-
-                divide_nutrition(
-                    total,
-                    people
-                )
-
-        }
+                people
+            )
 
     }
+
+}
