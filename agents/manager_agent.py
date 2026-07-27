@@ -94,7 +94,9 @@ def manager_agent(food_name, people):
     try:
 
         parsed = recipe_parser_agent(url)
-
+print("========== PARSER RESULT ==========")
+print(parsed)
+print("===================================")
     except Exception as e:
 
         print("Recipe Parser Error:", e)
