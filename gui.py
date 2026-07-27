@@ -5,6 +5,10 @@ from agents.manager_agent import manager_agent
 from agents.food_image_agent import food_image_agent
 
 
+# ---------------------------------------------------
+# PAGE CONFIG
+# ---------------------------------------------------
+
 st.set_page_config(
     page_title="FoodAI",
     page_icon="🍲",
@@ -12,9 +16,17 @@ st.set_page_config(
 )
 
 
+# ---------------------------------------------------
+# HEADER
+# ---------------------------------------------------
+
 st.title("🍲 FoodAI")
 st.subheader("AI Food Nutrition & Recipe Analyzer")
 
+
+# ---------------------------------------------------
+# USER INPUT
+# ---------------------------------------------------
 
 food = st.text_input(
     "Enter food name",
@@ -35,6 +47,10 @@ analyze = st.button(
 
 
 
+# ---------------------------------------------------
+# MAIN APP
+# ---------------------------------------------------
+
 if analyze:
 
     if not food:
@@ -45,6 +61,11 @@ if analyze:
 
     else:
 
+
+        # -----------------------------
+        # RUN MANAGER AGENT
+        # -----------------------------
+
         with st.spinner("Analyzing food..."):
 
             try:
@@ -53,6 +74,7 @@ if analyze:
                     food_name=food,
                     people=people
                 )
+
 
             except Exception as e:
 
@@ -63,31 +85,39 @@ if analyze:
                 st.stop()
 
 
+
         st.success(
             "Analysis Complete!"
         )
 
 
-    # ---------------------------------------------------
-    # Food Image
-    # ---------------------------------------------------
 
-    st.subheader("🍽 Food Image")
+        # ---------------------------------------------------
+        # FOOD IMAGE
+        # ---------------------------------------------------
 
-        image_url = food_image_agent(food)
+        st.subheader(
+            "🍽 Food Image"
+        )
 
-        if image_url:
+
+        image = food_image_agent(food)
+
+
+        if image:
+
 
             st.image(
-                image_url["image_url"],
+                image["image_url"],
                 caption=food.title(),
                 use_container_width=True
             )
 
+
             st.caption(
-                "Image credit: "
-                + image_url["credit"]
+                "Image credit: " + image["credit"]
             )
+
 
         else:
 
@@ -95,14 +125,16 @@ if analyze:
                 "Food image not available"
             )
 
-    # ---------------------------------------------------
-    # Nutrition
-    # ---------------------------------------------------
 
-    nutrition = result.get(
-        "nutrition",
-        {}
-    )
+
+        # ---------------------------------------------------
+        # NUTRITION
+        # ---------------------------------------------------
+
+        nutrition = result.get(
+            "nutrition",
+            {}
+        )
 
 
         total = nutrition.get(
@@ -115,6 +147,7 @@ if analyze:
             "Nutrition Per Person",
             {}
         )
+
 
 
         st.divider()
@@ -146,6 +179,7 @@ if analyze:
         )
 
 
+
         c4,c5,c6 = st.columns(3)
 
 
@@ -167,6 +201,10 @@ if analyze:
         )
 
 
+
+        # ---------------------------------------------------
+        # PER PERSON
+        # ---------------------------------------------------
 
         st.subheader(
             f"🍽 Nutrition Per Person ({people} people)"
@@ -217,9 +255,9 @@ if analyze:
 
 
 
-        # -------------------------------
-        # CHART
-        # -------------------------------
+        # ---------------------------------------------------
+        # MACRO CHART
+        # ---------------------------------------------------
 
         st.subheader(
             "📊 Macronutrient Calories"
@@ -228,6 +266,7 @@ if analyze:
 
         chart = pd.DataFrame(
             {
+
                 "Nutrient":[
                     "Protein",
                     "Carbs",
@@ -236,12 +275,25 @@ if analyze:
 
                 "Calories":[
 
-                    total.get("Protein (g)",0)*4,
+                    total.get(
+                        "Protein (g)",
+                        0
+                    ) * 4,
 
-                    total.get("Carbohydrates (g)",0)*4,
 
-                    total.get("Fat (g)",0)*9
+                    total.get(
+                        "Carbohydrates (g)",
+                        0
+                    ) * 4,
+
+
+                    total.get(
+                        "Fat (g)",
+                        0
+                    ) * 9
+
                 ]
+
             }
         )
 
@@ -254,9 +306,9 @@ if analyze:
 
 
 
-        # -------------------------------
+        # ---------------------------------------------------
         # RECIPES
-        # -------------------------------
+        # ---------------------------------------------------
 
         st.divider()
 
@@ -270,6 +322,7 @@ if analyze:
             "recipes",
             []
         )
+
 
 
         if not recipes:
@@ -295,20 +348,27 @@ if analyze:
                 )
 
 
-            st.markdown(
-                "### 🥘 Ingredients"
+
+            ingredients = recipe.get(
+                "Ingredients",
+                []
             )
 
 
-            for item in recipe.get(
-                "Ingredients",
-                []
-            ):
+            if ingredients:
 
-                st.write(
-                    "•",
-                    item
+                st.markdown(
+                    "### 🥘 Ingredients"
                 )
+
+
+                for item in ingredients:
+
+                    st.write(
+                        "•",
+                        item
+                    )
+
 
 
             instructions = recipe.get(
@@ -329,6 +389,7 @@ if analyze:
                     instructions,
                     list
                 ):
+
 
                     for i,step in enumerate(
                         instructions,
