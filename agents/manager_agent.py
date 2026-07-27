@@ -4,11 +4,6 @@ from agents.ingredient_quantity_agent import ingredient_quantity_agent
 from agents.ingredient_agent import ingredient_agent
 
 
-
-#################################################
-# DIVIDE NUTRITION BY PEOPLE
-#################################################
-
 def divide_nutrition(total, people):
 
     if people <= 0:
@@ -21,26 +16,19 @@ def divide_nutrition(total, people):
 
 
 
-#################################################
-# MANAGER AGENT
-#################################################
-
 def manager_agent(food_name, people):
 
 
     print("========== MANAGER START ==========")
     print("FOOD:", food_name)
-    print("PEOPLE:", people)
 
 
 
-    #################################################
+    ###################################
     # SEARCH RECIPES
-    #################################################
+    ###################################
 
-    search_result = recipe_search_agent(
-        food_name
-    )
+    search_result = recipe_search_agent(food_name)
 
 
     recipes = search_result.get(
@@ -60,9 +48,9 @@ def manager_agent(food_name, people):
 
 
 
-    #################################################
+    ###################################
     # PARSE RECIPES
-    #################################################
+    ###################################
 
     for recipe in recipes:
 
@@ -79,29 +67,14 @@ def manager_agent(food_name, people):
         )
 
 
-
         try:
 
 
-            parsed = recipe_parser_agent(
-                url
-            )
-
-
-            ingredients = parsed.get(
-                "Ingredients",
-                []
-            )
-
-
-            print(
-                "RAW INGREDIENT COUNT:",
-                len(ingredients)
-            )
+            parsed = recipe_parser_agent(url)
 
 
 
-            if len(ingredients) > 0:
+            if parsed.get("Ingredients"):
 
 
                 parsed["Recipe"] = recipe.get(
@@ -115,9 +88,7 @@ def manager_agent(food_name, people):
                 )
 
 
-
         except Exception as e:
-
 
             print(
                 "PARSER ERROR:",
@@ -133,21 +104,18 @@ def manager_agent(food_name, people):
 
 
 
-    #################################################
+    ###################################
     # NO RECIPE FOUND
-    #################################################
+    ###################################
 
     if not parsed_recipes:
 
 
         return {
 
-
             "query": food_name,
 
-
             "recipes": [],
-
 
             "nutrition": {
 
@@ -161,11 +129,12 @@ def manager_agent(food_name, people):
 
 
 
-    #################################################
-    # TAKE BEST RECIPE
-    #################################################
+    ###################################
+    # USE FIRST RECIPE FOR NUTRITION
+    ###################################
 
     selected_recipe = parsed_recipes[0]
+
 
 
     raw_ingredients = selected_recipe.get(
@@ -174,56 +143,37 @@ def manager_agent(food_name, people):
     )
 
 
+
     print(
-        "========== RAW INGREDIENTS =========="
+        "RAW INGREDIENTS:",
+        raw_ingredients
     )
 
 
-    for item in raw_ingredients:
 
-        print(item)
+    ###################################
+    # QUANTITY AGENT
+    ###################################
 
-
-
-
-    #################################################
-    # CONVERT INGREDIENTS TO GRAMS
-    #################################################
-
-    quantity_ingredients = ingredient_quantity_agent(
+    quantity_output = ingredient_quantity_agent(
         raw_ingredients
     )
 
 
 
     print(
-        "========== QUANTITY OUTPUT =========="
-    )
-
-
-    print(
-        quantity_ingredients
+        "QUANTITY OUTPUT:",
+        quantity_output
     )
 
 
 
-    #################################################
-    # USDA NUTRITION
-    #################################################
+    ###################################
+    # USDA NUTRITION AGENT
+    ###################################
 
     nutrition_result = ingredient_agent(
-        quantity_ingredients
-    )
-
-
-
-    print(
-        "========== NUTRITION RESULT =========="
-    )
-
-
-    print(
-        nutrition_result
+        quantity_output
     )
 
 
@@ -235,9 +185,16 @@ def manager_agent(food_name, people):
 
 
 
-    #################################################
-    # FINAL RESPONSE
-    #################################################
+    print(
+        "FINAL TOTAL:",
+        total
+    )
+
+
+
+    ###################################
+    # RETURN RESULT
+    ###################################
 
     return {
 
@@ -248,8 +205,7 @@ def manager_agent(food_name, people):
         "servings": people,
 
 
-        "recipes": parsed_recipes[:3],
-
+        "recipes": parsed_recipes,
 
 
         "nutrition": {
