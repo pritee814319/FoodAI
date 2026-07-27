@@ -138,9 +138,16 @@ def manager_agent(food_name, people):
     # Calculate nutrition from first recipe
 
     ingredients = parsed_recipes[0].get(
-        "Ingredients",
-        []
-    )
+    "Ingredients",
+    []
+)
+
+print("========== INGREDIENTS SENT TO USDA ==========")
+
+for item in ingredients:
+    print(item)
+
+print("TOTAL INGREDIENT COUNT:", len(ingredients))
 
 
 
