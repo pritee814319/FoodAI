@@ -23,11 +23,11 @@ def food_image_agent(food_name):
 
         if not api_key:
 
-    print(
-        "UNSPLASH KEY MISSING"
-    )
+            print(
+                "Unsplash API key missing"
+            )
 
-    return None
+            return None
 
 
 
@@ -66,7 +66,6 @@ def food_image_agent(food_name):
 
         if data.get("results"):
 
-
             image = data["results"][0]
 
 
@@ -81,18 +80,15 @@ def food_image_agent(food_name):
             }
 
 
-
         return None
 
 
 
     except Exception as e:
 
-
         print(
             "IMAGE ERROR:",
             e
         )
-
 
         return None
