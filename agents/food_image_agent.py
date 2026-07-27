@@ -1,24 +1,20 @@
 import requests
-import os
+import streamlit as st
 
 
 def food_image_agent(food_name):
 
-    print(
-        "========== FOOD IMAGE AGENT =========="
-    )
+    print("========== FOOD IMAGE AGENT ==========")
 
-    print(
-        "SEARCH IMAGE:",
-        food_name
-    )
+    print("SEARCH IMAGE:", food_name)
 
 
     try:
 
+        # Streamlit Cloud Secrets
         api_key = st.secrets.get(
-    "UNSPLASH_ACCESS_KEY"
-)
+            "UNSPLASH_ACCESS_KEY"
+        )
 
 
         if not api_key:
@@ -28,7 +24,6 @@ def food_image_agent(food_name):
             )
 
             return None
-
 
 
         url = "https://api.unsplash.com/search/photos"
@@ -51,7 +46,6 @@ def food_image_agent(food_name):
         }
 
 
-
         response = requests.get(
             url,
             params=params,
@@ -60,16 +54,22 @@ def food_image_agent(food_name):
         )
 
 
-        data = response.json()
+        print(
+            "UNSPLASH STATUS:",
+            response.status_code
+        )
 
+
+        data = response.json()
 
 
         if data.get("results"):
 
+
             image = data["results"][0]
 
 
-            return {
+            result = {
 
                 "image_url":
                     image["urls"]["regular"],
@@ -80,15 +80,32 @@ def food_image_agent(food_name):
             }
 
 
+            print(
+                "IMAGE FOUND:",
+                result
+            )
+
+
+            return result
+
+
+
+        print(
+            "NO IMAGE FOUND"
+        )
+
+
         return None
 
 
 
     except Exception as e:
 
+
         print(
             "IMAGE ERROR:",
             e
         )
+
 
         return None
