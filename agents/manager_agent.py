@@ -188,61 +188,59 @@ def manager_agent(food_name, people):
     )
 
 
-###################################
-# FOOD IMAGE
-###################################
+    ###################################
+    # FOOD IMAGE
+    ###################################
 
-image_url = None
+    image_url = None
 
-print(
-    "CALLING IMAGE AGENT NOW"
-)
+    print("CALLING IMAGE AGENT NOW")
 
 
-try:
+    try:
 
-    image_url = food_image_agent(
-        food_name
-    )
+        image_url = food_image_agent(
+            food_name
+        )
 
-    print(
-        "IMAGE RESULT:",
-        image_url
-    )
-
-
-except Exception as e:
-
-    print(
-        "IMAGE ERROR:",
-        e
-    )
+        print(
+            "IMAGE RESULT:",
+            image_url
+        )
 
 
-###################################
-# RETURN
-###################################
+    except Exception as e:
 
-return {
+        print(
+            "IMAGE ERROR:",
+            e
+        )
 
-    "query": food_name,
 
-    "servings": people,
+    ###################################
+    # RETURN
+    ###################################
 
-    "food_image": image_url,
+    return {
 
-    "recipes": parsed_recipes,
+        "query": food_name,
 
-    "nutrition": {
+        "servings": people,
 
-        "Total Recipe Nutrition": total,
+        "food_image": image_url,
 
-        "Nutrition Per Person":
-            divide_nutrition(
-                total,
-                people
-            )
+        "recipes": parsed_recipes,
+
+        "nutrition": {
+
+            "Total Recipe Nutrition": total,
+
+            "Nutrition Per Person":
+                divide_nutrition(
+                    total,
+                    people
+                )
+
+        }
 
     }
-
-}
