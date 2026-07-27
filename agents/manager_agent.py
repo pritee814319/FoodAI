@@ -188,26 +188,22 @@ def manager_agent(food_name, people):
     )
 
 
-
-    # -------------------------------
+    ###################################
     # FOOD IMAGE
-    # -------------------------------
+    ###################################
 
-    food_image = None
-
+    image_url = None
 
     try:
 
-        food_image = food_image_agent(
+        image_url = food_image_agent(
             food_name
         )
 
-
         print(
             "IMAGE:",
-            food_image
+            image_url
         )
-
 
     except Exception as e:
 
@@ -217,10 +213,9 @@ def manager_agent(food_name, people):
         )
 
 
-
-    # -------------------------------
+    ###################################
     # RETURN
-    # -------------------------------
+    ###################################
 
     return {
 
@@ -245,3 +240,4 @@ def manager_agent(food_name, people):
         }
 
     }
+    
