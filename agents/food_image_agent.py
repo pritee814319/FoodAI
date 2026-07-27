@@ -16,9 +16,9 @@ def food_image_agent(food_name):
 
     try:
 
-        api_key = os.getenv(
-            "UNSPLASH_ACCESS_KEY"
-        )
+        api_key = st.secrets.get(
+    "UNSPLASH_ACCESS_KEY"
+)
 
 
         if not api_key:
