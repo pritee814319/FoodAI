@@ -1,48 +1,98 @@
 import requests
-from bs4 import BeautifulSoup
+import os
 
 
-def food_image_agent(food):
+def food_image_agent(food_name):
+
+    print(
+        "========== FOOD IMAGE AGENT =========="
+    )
+
+    print(
+        "SEARCH IMAGE:",
+        food_name
+    )
+
 
     try:
 
-        search_url = (
-            "https://commons.wikimedia.org/w/index.php?search="
-            + food.replace(" ", "+")
-            + "&title=Special:MediaSearch&go=Go&type=image"
+        api_key = os.getenv(
+            "UNSPLASH_ACCESS_KEY"
         )
 
-        headers = {
-            "User-Agent": "Mozilla/5.0"
+
+        if not api_key:
+
+            print(
+                "Unsplash API key missing"
+            )
+
+            return None
+
+
+
+        url = "https://api.unsplash.com/search/photos"
+
+
+        params = {
+
+            "query": food_name + " food",
+
+            "per_page": 1
+
         }
 
-        page = requests.get(
-            search_url,
+
+        headers = {
+
+            "Authorization":
+            f"Client-ID {api_key}"
+
+        }
+
+
+
+        response = requests.get(
+            url,
+            params=params,
             headers=headers,
             timeout=10
         )
 
-        soup = BeautifulSoup(
-            page.text,
-            "html.parser"
+
+        data = response.json()
+
+
+
+        if data.get("results"):
+
+
+            image = data["results"][0]
+
+
+            return {
+
+                "image_url":
+                    image["urls"]["regular"],
+
+                "credit":
+                    image["user"]["name"]
+
+            }
+
+
+
+        return None
+
+
+
+    except Exception as e:
+
+
+        print(
+            "IMAGE ERROR:",
+            e
         )
 
-        img = soup.find("img")
 
-        if img:
-
-            src = img.get("src")
-
-            if src:
-
-                if src.startswith("//"):
-
-                    src = "https:" + src
-
-                return src
-
-    except Exception:
-
-        pass
-
-    return None
+        return None
