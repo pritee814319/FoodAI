@@ -98,7 +98,10 @@ if analyze:
     st.success(
         "Analysis Complete!"
     )
-
+st.write(
+    "TEST SECRET:",
+    "UNSPLASH_ACCESS_KEY" in st.secrets
+)
 
     # ===================================================
     # FOOD IMAGE
