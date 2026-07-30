@@ -187,7 +187,17 @@ def manager_agent(food_name, people):
     quantity_output = ingredient_quantity_agent(
         raw_ingredients
     )
+print("========== QUANTITY DEBUG ==========")
 
+for item in quantity_output:
+    print(
+        item["name"],
+        "=>",
+        item["grams"],
+        "grams"
+    )
+
+print("====================================")
 
     print(
         "QUANTITY:",
