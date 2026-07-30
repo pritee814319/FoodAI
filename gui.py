@@ -25,20 +25,14 @@ st.subheader("AI Food Nutrition & Recipe Analyzer")
 
 
 # ---------------------------------------------------
-# INPUT
+# FORM (ENTER KEY WORKS)
 # ---------------------------------------------------
 
-# ---------------------------------------------------
-# INPUT FORM (ENTER KEY ENABLED)
-# ---------------------------------------------------
-
-with st.form(
-    "food_form"
-):
+with st.form("food_form"):
 
     food = st.text_input(
         "Enter food name",
-        placeholder="Example: Poha, Ramen, Biryani"
+        placeholder="Example: Poha, Biryani, Ramen"
     )
 
 
@@ -54,28 +48,28 @@ with st.form(
     )
 
 
+
 # ---------------------------------------------------
 # MAIN
 # ---------------------------------------------------
 
 if analyze:
 
+
     if not food:
 
         st.warning(
-            "Please enter a food name first."
+            "Please enter food name"
         )
 
         st.stop()
 
 
-    # -----------------------------
-    # RUN FOOD AI
-    # -----------------------------
 
     with st.spinner(
         "Analyzing food..."
     ):
+
 
         try:
 
@@ -98,49 +92,38 @@ if analyze:
     st.success(
         "Analysis Complete!"
     )
-st.write(
-    "TEST SECRET:",
-    "UNSPLASH_ACCESS_KEY" in st.secrets
-)
 
-    # ===================================================
-    # FOOD IMAGE
-    # ===================================================
 
-st.subheader(
+
+    # ---------------------------------------------------
+    # IMAGE
+    # ---------------------------------------------------
+
+    st.subheader(
         "🍽 Food Image"
     )
 
 
-image_data = result.get(
-        "food_image"
-    )
+    image_data = None
 
 
-    # fallback if manager did not return image
+    try:
 
-if not image_data:
+        image_data = food_image_agent(
+            food
+        )
 
-        try:
 
-            image_data = food_image_agent(
-                food
-            )
+    except Exception as e:
 
-        except Exception as e:
-
-            print(
-                "IMAGE ERROR:",
-                e
-            )
-
-            image_data = None
+        st.write(
+            "Image Agent Error:",
+            e
+        )
 
 
 
-    if image_data and image_data.get(
-        "image_url"
-    ):
+    if image_data and image_data.get("image_url"):
 
 
         st.image(
@@ -150,9 +133,7 @@ if not image_data:
         )
 
 
-        if image_data.get(
-            "credit"
-        ):
+        if image_data.get("credit"):
 
             st.caption(
                 "Image credit: "
@@ -169,9 +150,10 @@ if not image_data:
 
 
 
-    # ===================================================
+
+    # ---------------------------------------------------
     # NUTRITION
-    # ===================================================
+    # ---------------------------------------------------
 
     nutrition = result.get(
         "nutrition",
@@ -189,6 +171,7 @@ if not image_data:
         "Nutrition Per Person",
         {}
     )
+
 
 
     st.divider()
@@ -220,7 +203,6 @@ if not image_data:
     )
 
 
-
     c4,c5,c6 = st.columns(3)
 
 
@@ -243,9 +225,9 @@ if not image_data:
 
 
 
-    # ===================================================
+    # ---------------------------------------------------
     # PER PERSON
-    # ===================================================
+    # ---------------------------------------------------
 
     st.subheader(
         f"🍽 Nutrition Per Person ({people} people)"
@@ -274,31 +256,9 @@ if not image_data:
 
 
 
-    p4,p5,p6 = st.columns(3)
-
-
-    p4.metric(
-        "🥑 Fat",
-        f"{per_person.get('Fat (g)',0)} g"
-    )
-
-
-    p5.metric(
-        "🌾 Fiber",
-        f"{per_person.get('Fiber (g)',0)} g"
-    )
-
-
-    p6.metric(
-        "🧂 Sodium",
-        f"{per_person.get('Sodium (mg)',0)} mg"
-    )
-
-
-
-    # ===================================================
-    # MACRO CHART
-    # ===================================================
+    # ---------------------------------------------------
+    # CHART
+    # ---------------------------------------------------
 
     st.subheader(
         "📊 Macronutrient Calories"
@@ -307,35 +267,17 @@ if not image_data:
 
     chart = pd.DataFrame(
         {
-
             "Nutrient":[
                 "Protein",
                 "Carbs",
                 "Fat"
             ],
 
-
             "Calories":[
-
-                total.get(
-                    "Protein (g)",
-                    0
-                ) * 4,
-
-
-                total.get(
-                    "Carbohydrates (g)",
-                    0
-                ) * 4,
-
-
-                total.get(
-                    "Fat (g)",
-                    0
-                ) * 9
-
+                total.get("Protein (g)",0)*4,
+                total.get("Carbohydrates (g)",0)*4,
+                total.get("Fat (g)",0)*9
             ]
-
         }
     )
 
@@ -348,9 +290,9 @@ if not image_data:
 
 
 
-    # ===================================================
+    # ---------------------------------------------------
     # RECIPES
-    # ===================================================
+    # ---------------------------------------------------
 
     st.divider()
 
@@ -366,13 +308,6 @@ if not image_data:
     )
 
 
-    if not recipes:
-
-        st.info(
-            "No recipes found"
-        )
-
-
     for recipe in recipes:
 
 
@@ -381,9 +316,7 @@ if not image_data:
         )
 
 
-        if recipe.get(
-            "URL"
-        ):
+        if recipe.get("URL"):
 
             st.write(
                 "🔗 Recipe Source:",
@@ -392,25 +325,20 @@ if not image_data:
 
 
 
-        ingredients = recipe.get(
-            "Ingredients",
-            []
+        st.markdown(
+            "### 🥘 Ingredients"
         )
 
 
-        if ingredients:
+        for item in recipe.get(
+            "Ingredients",
+            []
+        ):
 
-            st.markdown(
-                "### 🥘 Ingredients"
+            st.write(
+                "•",
+                item
             )
-
-
-            for item in ingredients:
-
-                st.write(
-                    "•",
-                    item
-                )
 
 
 
@@ -422,7 +350,6 @@ if not image_data:
 
         if instructions:
 
-
             st.markdown(
                 "### 👩‍🍳 Instructions"
             )
@@ -433,7 +360,6 @@ if not image_data:
                 list
             ):
 
-
                 for i, step in enumerate(
                     instructions,
                     1
@@ -442,7 +368,6 @@ if not image_data:
                     st.write(
                         f"{i}. {step}"
                     )
-
 
             else:
 
