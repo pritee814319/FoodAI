@@ -3,7 +3,9 @@ from agents.recipe_search import recipe_search_agent
 from agents.recipe_parser_agent import recipe_parser_agent
 from agents.ingredient_quantity_agent import ingredient_quantity_agent
 from agents.ingredient_agent import ingredient_agent
+from agents.nutrition_agent import nutrition_agent
 from agents.recipe_rank_agent import recipe_rank_agent
+
 
 
 def divide_nutrition(total, people):
@@ -18,10 +20,79 @@ def divide_nutrition(total, people):
 
 
 
+def calculate_total_nutrition(cleaned_ingredients):
+
+    total = {
+
+        "Calories (kcal)": 0,
+        "Protein (g)": 0,
+        "Carbohydrates (g)": 0,
+        "Fat (g)": 0,
+        "Fiber (g)": 0,
+        "Sugar (g)": 0,
+        "Sodium (mg)": 0
+
+    }
+
+
+    for item in cleaned_ingredients:
+
+        try:
+
+            result = nutrition_agent(
+                item["usda_name"]
+            )
+
+
+            nutrition = result.get(
+                "nutrition",
+                {}
+            )
+
+
+            grams = item.get(
+                "grams",
+                0
+            )
+
+
+            # USDA values are usually per 100g
+            multiplier = grams / 100
+
+
+            for key in total:
+
+                total[key] += (
+                    nutrition.get(key, 0)
+                    * multiplier
+                )
+
+
+        except Exception as e:
+
+            print(
+                "Nutrition error:",
+                e
+            )
+
+
+    return {
+
+        key: round(value, 2)
+
+        for key,value in total.items()
+
+    }
+
+
+
+
 def manager_agent(food_name, people):
+
 
     print("========== MANAGER START ==========")
     print("FOOD:", food_name)
+
 
 
     ###################################
@@ -31,6 +102,7 @@ def manager_agent(food_name, people):
     search_result = recipe_search_agent(
         food_name
     )
+
 
     recipes = search_result.get(
         "recipes",
@@ -47,20 +119,17 @@ def manager_agent(food_name, people):
     parsed_recipes = []
 
 
+
     ###################################
     # PARSE RECIPES
     ###################################
 
     for recipe in recipes:
 
+
         url = recipe.get(
             "URL",
             ""
-        )
-
-        print(
-            "PARSING:",
-            url
         )
 
 
@@ -73,10 +142,12 @@ def manager_agent(food_name, people):
 
             if parsed.get("Ingredients"):
 
+
                 parsed["Recipe"] = recipe.get(
                     "Recipe",
                     food_name
                 )
+
 
                 parsed["URL"] = url
 
@@ -89,7 +160,7 @@ def manager_agent(food_name, people):
         except Exception as e:
 
             print(
-                "PARSER ERROR:",
+                "Parser error:",
                 e
             )
 
@@ -104,13 +175,21 @@ def manager_agent(food_name, people):
 
     if not parsed_recipes:
 
+
         return {
+
 
             "query": food_name,
 
+
+            "servings": people,
+
+
             "recipes": [],
 
+
             "food_image": None,
+
 
             "nutrition": {
 
@@ -125,17 +204,11 @@ def manager_agent(food_name, people):
 
 
     ###################################
-    # RANK RECIPES
+    # RANK RECIPE
     ###################################
 
     ranking = recipe_rank_agent(
         parsed_recipes
-    )
-
-
-    print(
-        "RANKING:",
-        ranking
     )
 
 
@@ -144,18 +217,22 @@ def manager_agent(food_name, people):
     )
 
 
+
     selected_recipe = next(
+
         (
             r for r in parsed_recipes
             if r.get("Recipe") == best_recipe_name
         ),
+
         parsed_recipes[0]
+
     )
 
 
 
     ###################################
-    # INGREDIENT QUANTITY
+    # INGREDIENT PROCESSING
     ###################################
 
     raw_ingredients = selected_recipe.get(
@@ -170,80 +247,43 @@ def manager_agent(food_name, people):
 
 
     print(
-        "QUANTITY OUTPUT:",
+        "QUANTITY:",
         quantity_output
     )
 
 
 
-    ###################################
-# CLEAN INGREDIENTS
-###################################
-
-cleaned_ingredients = ingredient_agent(
-    quantity_output
-)
-
-
-###################################
-# USDA NUTRITION
-###################################
-
-from agents.nutrition_agent import nutrition_agent
-
-
-total = {
-
-    "Calories (kcal)": 0,
-    "Protein (g)": 0,
-    "Carbohydrates (g)": 0,
-    "Fat (g)": 0,
-    "Fiber (g)": 0,
-    "Sugar (g)": 0,
-    "Sodium (mg)": 0
-
-}
-
-
-for item in cleaned_ingredients:
-
-    result = nutrition_agent(
-        item["usda_name"]
+    cleaned_ingredients = ingredient_agent(
+        quantity_output
     )
 
-
-    nutrition = result.get(
-        "nutrition",
-        {}
-    )
-
-
-    grams = item.get(
-        "grams",
-        0
-    )
-
-
-    factor = grams / 100
-
-
-    for key in total:
-
-        total[key] += round(
-            nutrition.get(key,0) * factor,
-            2
-        )
-
-
-
-    ###################################
-    # FOOD IMAGE
-    ###################################
 
     print(
-        "CALLING IMAGE AGENT NOW"
+        "CLEAN INGREDIENTS:",
+        cleaned_ingredients
     )
 
+
+
+    ###################################
+    # NUTRITION CALCULATION
+    ###################################
+
+    total = calculate_total_nutrition(
+        cleaned_ingredients
+    )
+
+
+    per_person = divide_nutrition(
+        total,
+        people
+    )
+
+
+
+    ###################################
+    # IMAGE
+    ###################################
 
     image_url = None
 
@@ -253,13 +293,6 @@ for item in cleaned_ingredients:
         image_url = food_image_agent(
             food_name
         )
-
-
-        print(
-            "IMAGE RESULT:",
-            image_url
-        )
-
 
     except Exception as e:
 
@@ -271,44 +304,31 @@ for item in cleaned_ingredients:
 
 
     ###################################
-    # DEBUG SERVINGS
+    # FINAL OUTPUT
     ###################################
 
-    print("==============================")
-    print("PEOPLE RECEIVED:", people)
-    print("TOTAL NUTRITION:", total)
-
-    per_person_test = divide_nutrition(
-        total,
-        people
-    )
-
-    print(
-        "PER PERSON TEST:",
-        per_person_test
-    )
-
-    print("==============================")
-
-
-    ###################################
-    # RETURN RESULT
-    ###################################
     return {
+
 
         "query": food_name,
 
+
         "servings": people,
+
 
         "food_image": image_url,
 
+
         "recipes": parsed_recipes,
+
 
         "nutrition": {
 
+
             "Total Recipe Nutrition": total,
 
-            "Nutrition Per Person": per_person_test
+
+            "Nutrition Per Person": per_person
 
         }
 
