@@ -95,16 +95,13 @@ if analyze:
 
 
 
-    # ---------------------------------------------------
-    # IMAGE
-    # ---------------------------------------------------
+        # ===================================================
+    # FOOD IMAGE
+    # ===================================================
 
     st.subheader(
         "🍽 Food Image"
     )
-
-
-    image_data = None
 
 
     try:
@@ -112,43 +109,41 @@ if analyze:
         image_data = food_image_agent(
             food
         )
-st.write("DEBUG IMAGE:", image_data)
-
-    except Exception as e:
 
         st.write(
-            "Image Agent Error:",
-            e
+            "DEBUG IMAGE:",
+            image_data
         )
 
 
+        if image_data and image_data.get("image_url"):
 
-    if image_data and image_data.get("image_url"):
-
-
-        st.image(
-            image_data["image_url"],
-            caption=food.title(),
-            use_container_width=True
-        )
-
-
-        if image_data.get("credit"):
-
-            st.caption(
-                "Image credit: "
-                +
-                image_data["credit"]
+            st.image(
+                image_data["image_url"],
+                caption=food.title(),
+                use_container_width=True
             )
 
 
-    else:
+            if image_data.get("credit"):
 
-        st.write(
-            "Food image not available"
+                st.caption(
+                    "Image credit: "
+                    + image_data["credit"]
+                )
+
+        else:
+
+            st.write(
+                "Food image not available"
+            )
+
+
+    except Exception as e:
+
+        st.error(
+            f"Image Agent Error: {e}"
         )
-
-
 
 
     # ---------------------------------------------------
