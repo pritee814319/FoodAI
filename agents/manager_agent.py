@@ -227,6 +227,27 @@ def manager_agent(food_name, people):
 
 
     ###################################
+    # DEBUG SERVINGS
+    ###################################
+
+    print("==============================")
+    print("PEOPLE RECEIVED:", people)
+    print("TOTAL NUTRITION:", total)
+
+    per_person_test = divide_nutrition(
+        total,
+        people
+    )
+
+    print(
+        "PER PERSON TEST:",
+        per_person_test
+    )
+
+    print("==============================")
+
+
+    ###################################
     # RETURN RESULT
     ###################################
 
@@ -244,11 +265,7 @@ def manager_agent(food_name, people):
 
             "Total Recipe Nutrition": total,
 
-            "Nutrition Per Person":
-                divide_nutrition(
-                    total,
-                    people
-                )
+            "Nutrition Per Person": per_person_test
 
         }
 
