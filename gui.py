@@ -112,7 +112,7 @@ st.subheader(
     )
 
 
-    image_data = result.get(
+image_data = result.get(
         "food_image"
     )
 
