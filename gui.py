@@ -112,7 +112,7 @@ if analyze:
         image_data = food_image_agent(
             food
         )
-
+st.write("DEBUG IMAGE:", image_data)
 
     except Exception as e:
 
