@@ -139,3 +139,11 @@ def clean_ingredients(quantity_output):
 
 
     return cleaned
+
+
+
+
+# wrapper used by manager_agent
+def ingredient_agent(quantity_output):
+
+    return clean_ingredients(quantity_output)
