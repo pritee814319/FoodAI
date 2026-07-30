@@ -28,22 +28,30 @@ st.subheader("AI Food Nutrition & Recipe Analyzer")
 # INPUT
 # ---------------------------------------------------
 
-food = st.text_input(
-    "Enter food name",
-    placeholder="Example: Poha, Ramen, Biryani"
-)
+# ---------------------------------------------------
+# INPUT FORM (ENTER KEY ENABLED)
+# ---------------------------------------------------
+
+with st.form(
+    "food_form"
+):
+
+    food = st.text_input(
+        "Enter food name",
+        placeholder="Example: Poha, Ramen, Biryani"
+    )
 
 
-people = st.number_input(
-    "How many people are you cooking for?",
-    min_value=1,
-    value=2
-)
+    people = st.number_input(
+        "How many people are you cooking for?",
+        min_value=1,
+        value=2
+    )
 
 
-analyze = st.button(
-    "🔍 Analyze Food"
-)
+    analyze = st.form_submit_button(
+        "🔍 Analyze Food"
+    )
 
 
 # ---------------------------------------------------
