@@ -146,97 +146,100 @@ def choose_best_food(results, search_term):
     return preferred[0][1]
 
 
-
-
 def extract_nutrients(food):
-
 
     nutrients = {}
 
 
-    for item in food.get(
-        "foodNutrients",
-        []
-    ):
+    for item in food.get("foodNutrients", []):
+
+        name = item.get("nutrientName", "")
+
+        value = item.get("value", 0)
+
+        unit = item.get("unitName", "")
 
 
-        name = item.get(
-            "nutrientName"
-        )
+        # ENERGY FIX
+        if name == "Energy":
+
+            if unit == "KCAL":
+                nutrients["Calories (kcal)"] = value
+
+            elif unit == "KJ":
+                nutrients["Calories (kcal)"] = round(
+                    value / 4.184,
+                    2
+                )
 
 
-        value = item.get(
-            "value",
-            0
-        )
+        elif name == "Protein":
+
+            nutrients["Protein (g)"] = value
 
 
-        if name in [
+        elif name == "Carbohydrate, by difference":
 
-            "Energy",
-            "Protein",
-            "Carbohydrate, by difference",
-            "Total lipid (fat)",
-            "Fiber, total dietary",
-            "Total Sugars",
-            "Sodium, Na"
+            nutrients["Carbohydrates (g)"] = value
 
-        ]:
 
-            nutrients[name] = value
+        elif name == "Total lipid (fat)":
+
+            nutrients["Fat (g)"] = value
+
+
+        elif name == "Fiber, total dietary":
+
+            nutrients["Fiber (g)"] = value
+
+
+        elif name == "Total Sugars":
+
+            nutrients["Sugar (g)"] = value
+
+
+        elif name == "Sodium, Na":
+
+            nutrients["Sodium (mg)"] = value
 
 
 
     return {
 
+        "Calories (kcal)": round(
+            nutrients.get("Calories (kcal)",0),
+            2
+        ),
 
-        "Calories (kcal)":
-            nutrients.get(
-                "Energy",
-                0
-            ),
+        "Protein (g)": round(
+            nutrients.get("Protein (g)",0),
+            2
+        ),
 
+        "Carbohydrates (g)": round(
+            nutrients.get("Carbohydrates (g)",0),
+            2
+        ),
 
-        "Protein (g)":
-            nutrients.get(
-                "Protein",
-                0
-            ),
+        "Fat (g)": round(
+            nutrients.get("Fat (g)",0),
+            2
+        ),
 
+        "Fiber (g)": round(
+            nutrients.get("Fiber (g)",0),
+            2
+        ),
 
-        "Carbohydrates (g)":
-            nutrients.get(
-                "Carbohydrate, by difference",
-                0
-            ),
+        "Sugar (g)": round(
+            nutrients.get("Sugar (g)",0),
+            2
+        ),
 
-
-        "Fat (g)":
-            nutrients.get(
-                "Total lipid (fat)",
-                0
-            ),
-
-
-        "Fiber (g)":
-            nutrients.get(
-                "Fiber, total dietary",
-                0
-            ),
-
-
-        "Sugar (g)":
-            nutrients.get(
-                "Total Sugars",
-                0
-            ),
-
-
-        "Sodium (mg)":
-            nutrients.get(
-                "Sodium, Na",
-                0
-            )
+        "Sodium (mg)": round(
+            nutrients.get("Sodium (mg)",0),
+            2
+        )
 
     }
 
