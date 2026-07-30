@@ -119,7 +119,7 @@ image_data = result.get(
 
     # fallback if manager did not return image
 
-    if not image_data:
+if not image_data:
 
         try:
 
