@@ -1,12 +1,11 @@
-
 # agents/ingredient_agent.py
 
 
 INGREDIENT_MAP = {
 
-    "poha": "Rice flakes, dry",
-    "rice flakes": "Rice flakes, dry",
-    "flattened rice": "Rice flakes, dry",
+    "poha": "Rice flakes",
+    "rice flakes": "Rice flakes",
+    "flattened rice": "Rice flakes",
 
     "turmeric": "Turmeric, ground",
 
@@ -14,8 +13,8 @@ INGREDIENT_MAP = {
 
     "sugar": "Sugar, granulated",
 
-    "oil": "Vegetable oil",
-    "vegetable oil": "Vegetable oil",
+    "oil": "Oil, vegetable",
+    "vegetable oil": "Oil, vegetable",
 
     "mustard seeds": "Mustard seed",
 
@@ -44,9 +43,10 @@ def normalize_ingredient(name):
     name = name.lower().strip()
 
 
-    for key,value in INGREDIENT_MAP.items():
+    for key, value in INGREDIENT_MAP.items():
 
         if key in name:
+
             return value
 
 
@@ -57,23 +57,36 @@ def normalize_ingredient(name):
 
 def clean_ingredients(quantity_output):
 
-    cleaned=[]
+    cleaned = []
 
 
     for item in quantity_output:
 
-        name=item.get("name","")
 
-        grams=item.get("grams",0)
+        name = item.get(
+            "name",
+            ""
+        )
+
+
+        grams = item.get(
+            "grams",
+            0
+        )
 
 
         cleaned.append({
 
-            "original": item.get("original",""),
+            "original": item.get(
+                "original",
+                ""
+            ),
 
             "name": name,
 
-            "usda_name": normalize_ingredient(name),
+            "usda_name": normalize_ingredient(
+                name
+            ),
 
             "grams": grams
 
@@ -85,7 +98,19 @@ def clean_ingredients(quantity_output):
 
 
 
-# Manager agent calls this function
 def ingredient_agent(quantity_output):
 
-    return clean_ingredients(quantity_output)
+    print("INGREDIENT AGENT INPUT:")
+    print(quantity_output)
+
+
+    result = clean_ingredients(
+        quantity_output
+    )
+
+
+    print("CLEAN INGREDIENTS:")
+    print(result)
+
+
+    return result
