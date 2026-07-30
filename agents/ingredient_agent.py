@@ -5,81 +5,135 @@ import re
 
 INGREDIENT_MAP = {
 
-    "poha": "Rice, white, flakes, cooked",
-    "rice flakes": "Rice, white, flakes",
-    "flattened rice": "Rice, white, flakes",
 
-    "turmeric": "Spices, turmeric, ground",
+    # Rice / Poha
+    "poha": "Rice flakes, dry",
+
+    "rice flakes": "Rice flakes, dry",
+
+    "flattened rice": "Rice flakes, dry",
+
+
+
+    # Spices
+    "turmeric": "Turmeric, ground",
 
     "salt": "Salt, table",
 
     "sugar": "Sugar, granulated",
 
-    "oil": "Oil, vegetable",
-    "vegetable oil": "Oil, vegetable",
 
-    "mustard seeds": "Seeds, mustard",
 
-    "peanuts": "Peanuts, all types, raw",
+    # Oil
+    "oil": "Vegetable oil",
 
+    "vegetable oil": "Vegetable oil",
+
+    "avocado oil": "Avocado oil",
+
+
+
+    # Seeds
+    "mustard seeds": "Mustard seed",
+
+
+
+    # Nuts
+    "peanuts": "Peanuts, raw",
+
+
+
+    # Vegetables
     "onion": "Onions, raw",
 
     "red onion": "Onions, raw",
 
-    "curry leaves": "Curry leaves, raw",
-
-    "potato": "Potatoes, flesh and skin, raw",
+    "potato": "Potatoes, raw",
 
     "peas": "Peas, green, raw",
 
     "green peas": "Peas, green, raw",
 
+
+
+    # Herbs
     "cilantro": "Coriander leaves, raw",
 
-    "lemon": "Lemon, raw, without peel",
+    "coriander": "Coriander leaves, raw",
+
+    "curry leaves": "Curry leaves",
+
+
+
+    # Citrus
+    "lemon": "Lemon juice, raw"
 
 }
 
 
+
+
+
 def normalize_ingredient(name):
 
-    name=name.lower().strip()
+
+    name = name.lower().strip()
 
 
     for key,value in INGREDIENT_MAP.items():
 
         if key in name:
+
             return value
+
 
 
     return name
 
 
 
+
+
 def clean_ingredients(quantity_output):
+
 
     cleaned=[]
 
 
     for item in quantity_output:
 
-        name=item["name"]
 
-        grams=item["grams"]
+        name = item.get(
+            "name",
+            ""
+        )
 
 
-        normalized=normalize_ingredient(name)
+        grams = item.get(
+            "grams",
+            0
+        )
 
 
         cleaned.append({
 
-            "original":item["original"],
+            "original":
+            item.get(
+                "original",
+                ""
+            ),
 
-            "name":name,
 
-            "usda_name":normalized,
+            "name":
+            name,
 
-            "grams":grams
+
+            "usda_name":
+            normalize_ingredient(name),
+
+
+            "grams":
+            grams
 
         })
 
