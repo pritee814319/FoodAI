@@ -5,35 +5,43 @@ import os
 
 def food_image_agent(food_name):
 
-    print("========== FOOD IMAGE AGENT ==========")
-    print("SEARCH IMAGE:", food_name)
+    print("==============================")
+    print("FOOD IMAGE AGENT START")
+    print("SEARCH:", food_name)
 
 
     try:
 
-        # Get key from Streamlit Cloud secrets
-        try:
+        # Try Streamlit secret first
+        api_key = None
 
+        try:
             api_key = st.secrets["UNSPLASH_ACCESS_KEY"]
 
-            print(
-                "SECRET FOUND FROM STREAMLIT"
-            )
+            print("SECRET FOUND")
 
         except Exception as e:
 
             print(
-                "STREAMLIT SECRET ERROR:",
+                "SECRET ERROR:",
                 e
             )
+
+
+        if not api_key:
 
             api_key = os.getenv(
                 "UNSPLASH_ACCESS_KEY"
             )
 
+            print(
+                "ENV KEY FOUND:",
+                bool(api_key)
+            )
+
 
         print(
-            "API KEY EXISTS:",
+            "FINAL KEY STATUS:",
             bool(api_key)
         )
 
@@ -41,7 +49,7 @@ def food_image_agent(food_name):
         if not api_key:
 
             print(
-                "NO API KEY FOUND"
+                "NO UNSPLASH KEY"
             )
 
             return None
@@ -53,7 +61,7 @@ def food_image_agent(food_name):
 
         params = {
 
-            "query": food_name + " food",
+            "query": f"{food_name} food",
 
             "per_page": 1
 
@@ -77,48 +85,56 @@ def food_image_agent(food_name):
 
 
         print(
-            "UNSPLASH STATUS:",
+            "STATUS:",
             response.status_code
         )
 
 
         print(
-            "UNSPLASH RESPONSE:",
-            response.text[:300]
+            "RESPONSE:",
+            response.text[:500]
         )
+
+
+
+        if response.status_code != 200:
+
+            return None
+
 
 
         data = response.json()
 
 
-        if data.get("results"):
 
-
-            image = data["results"][0]
-
+        if len(data.get("results", [])) == 0:
 
             print(
-                "IMAGE FOUND"
+                "NO RESULTS"
             )
 
+            return None
 
-            return {
 
-                "image_url":
-                    image["urls"]["regular"],
 
-                "credit":
-                    image["user"]["name"]
-
-            }
+        image = data["results"][0]
 
 
         print(
-            "NO IMAGE RESULTS"
+            "IMAGE FOUND:",
+            image["urls"]["regular"]
         )
 
 
-        return None
+        return {
+
+            "image_url":
+                image["urls"]["regular"],
+
+            "credit":
+                image["user"]["name"]
+
+        }
 
 
 
@@ -126,7 +142,7 @@ def food_image_agent(food_name):
 
 
         print(
-            "IMAGE ERROR:",
+            "IMAGE AGENT ERROR:",
             e
         )
 
