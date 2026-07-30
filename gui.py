@@ -75,7 +75,7 @@ if analyze:
 
             result = manager_agent(
                 food_name=food,
-                people=people
+                people=int(people)
             )
 
 
