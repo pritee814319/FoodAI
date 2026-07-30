@@ -1,36 +1,71 @@
 import requests
 import streamlit as st
+import os
+
+
+def get_unsplash_key():
+
+    # Streamlit Cloud secrets
+    try:
+        key = st.secrets["UNSPLASH_ACCESS_KEY"]
+
+        if key:
+            return key
+
+    except Exception as e:
+        print("STREAMLIT SECRET ERROR:", e)
+
+
+    # Local environment fallback
+    key = os.getenv(
+        "UNSPLASH_ACCESS_KEY"
+    )
+
+    return key
+
 
 
 def food_image_agent(food_name):
 
-    print("========== FOOD IMAGE AGENT ==========")
-    print("SEARCHING IMAGE FOR:", food_name)
+    print("==============================")
+    print("FOOD IMAGE AGENT START")
+    print("SEARCH:", food_name)
+
+
+    key = get_unsplash_key()
+
+
+    if not key:
+
+        print("NO UNSPLASH KEY")
+
+        return None
+
+
+
+    print("UNSPLASH KEY FOUND")
+
+
+    url = "https://api.unsplash.com/search/photos"
+
+
+    params = {
+
+        "query": food_name + " food",
+
+        "client_id": key,
+
+        "per_page": 1
+
+    }
+
 
 
     try:
 
-        api_key = st.secrets["UNSPLASH_ACCESS_KEY"]
-
-
-        url = "https://api.unsplash.com/search/photos"
-
-
-        params = {
-            "query": food_name + " food",
-            "per_page": 1
-        }
-
-
-        headers = {
-            "Authorization": f"Client-ID {api_key}"
-        }
-
-
         response = requests.get(
             url,
             params=params,
-            headers=headers,
             timeout=10
         )
 
@@ -50,23 +85,14 @@ def food_image_agent(food_name):
             photo = data["results"][0]
 
 
-            image_url = photo["urls"]["regular"]
-
-
-            photographer = photo["user"]["name"]
-
-
-            print(
-                "IMAGE FOUND:",
-                image_url
-            )
-
-
             return {
 
-                "image_url": image_url,
+                "image_url":
+                    photo["urls"]["regular"],
 
-                "credit": photographer
+
+                "credit":
+                    photo["user"]["name"]
 
             }
 
@@ -74,20 +100,16 @@ def food_image_agent(food_name):
         else:
 
             print(
-                "NO IMAGE FOUND"
+                "NO IMAGE RESULTS"
             )
-
-            return None
-
 
 
     except Exception as e:
 
-
         print(
-            "IMAGE AGENT ERROR:",
+            "IMAGE REQUEST ERROR:",
             e
         )
 
 
-        return None
+    return None
