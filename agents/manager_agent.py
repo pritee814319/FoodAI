@@ -294,7 +294,6 @@ for item in cleaned_ingredients:
     ###################################
     # RETURN RESULT
     ###################################
-
     return {
 
         "query": food_name,
