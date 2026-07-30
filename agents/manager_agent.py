@@ -256,7 +256,18 @@ def manager_agent(food_name, people):
     cleaned_ingredients = ingredient_agent(
         quantity_output
     )
+print("========== INGREDIENT DEBUG ==========")
 
+for item in cleaned_ingredients:
+    print(
+        item["name"],
+        "|",
+        item["usda_name"],
+        "| grams:",
+        item["grams"]
+    )
+
+print("======================================")
 
     print(
         "CLEAN INGREDIENTS:",
