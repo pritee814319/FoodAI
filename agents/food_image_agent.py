@@ -1,11 +1,12 @@
 import requests
-import os
 import streamlit as st
 
 
 def food_image_agent(food_name):
 
-    print("========== FOOD IMAGE AGENT ==========")
+    print(
+        "========== FOOD IMAGE AGENT =========="
+    )
 
     print(
         "SEARCH IMAGE:",
@@ -15,19 +16,16 @@ def food_image_agent(food_name):
 
     try:
 
-        # Try Streamlit Cloud Secrets first
-        try:
-            api_key = st.secrets["UNSPLASH_ACCESS_KEY"]
-        except:
-            api_key = os.getenv(
-                "UNSPLASH_ACCESS_KEY"
-            )
+        api_key = st.secrets.get(
+            "UNSPLASH_ACCESS_KEY",
+            None
+        )
 
 
         if not api_key:
 
             print(
-                "UNSPLASH KEY MISSING"
+                "Unsplash API key missing"
             )
 
             return None
@@ -39,7 +37,7 @@ def food_image_agent(food_name):
 
         params = {
 
-            "query": f"{food_name} food",
+            "query": food_name + " food",
 
             "per_page": 1
 
@@ -52,7 +50,6 @@ def food_image_agent(food_name):
             f"Client-ID {api_key}"
 
         }
-
 
 
         response = requests.get(
@@ -72,11 +69,6 @@ def food_image_agent(food_name):
         data = response.json()
 
 
-        print(
-            "UNSPLASH DATA:",
-            data
-        )
-
 
         if data.get("results"):
 
@@ -93,7 +85,6 @@ def food_image_agent(food_name):
                     image["user"]["name"]
 
             }
-
 
 
         return None
