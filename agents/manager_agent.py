@@ -193,10 +193,15 @@ from agents.nutrition_agent import nutrition_agent
 
 
 total = {
-    "Calories": 0,
-    "Protein": 0,
-    "Carbs": 0,
-    "Fat": 0
+
+    "Calories (kcal)": 0,
+    "Protein (g)": 0,
+    "Carbohydrates (g)": 0,
+    "Fat (g)": 0,
+    "Fiber (g)": 0,
+    "Sugar (g)": 0,
+    "Sodium (mg)": 0
+
 }
 
 
