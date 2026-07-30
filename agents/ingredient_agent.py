@@ -1,166 +1,313 @@
-from api.usda_client import search_usda_food
+import requests
+import streamlit as st
+import os
 
 
-#################################################
-# FOOD NORMALIZATION
-#################################################
-
-FOOD_MAPPING = {
-
-    "poha": "Rice, white, raw",
-
-    "rice flakes": "Rice, white, raw",
-
-    "beaten rice": "Rice, white, raw",
-
-    "flattened rice": "Rice, white, raw",
-
-    "vegetable oil": "Oil, vegetable, industrial, canola",
-
-    "oil": "Oil, vegetable, industrial, canola",
-
-    "peanut": "Peanuts, all types, roasted",
-
-    "peanuts": "Peanuts, all types, roasted",
-
-    "jeera": "Cumin seed",
-
-    "cumin": "Cumin seed",
-
-    "cumin seeds": "Cumin seed",
-
-    "mustard": "Mustard seed",
-
-    "mustard seeds": "Mustard seed",
-
-    "coriander leaves": "Cilantro",
-
-    "green chilli": "Green pepper",
-
-    "chilli": "Green pepper",
-
-    "hing": "Asafoetida"
-
-}
+USDA_URL = (
+    "https://api.nal.usda.gov/fdc/v1/foods/search"
+)
 
 
 
-#################################################
-# USDA NUTRITION EXTRACTION
-#################################################
+def get_usda_key():
 
-def extract_nutrition(result):
+    try:
+        return st.secrets["USDA_API_KEY"]
+
+    except:
+
+        return os.getenv(
+            "USDA_API_KEY"
+        )
 
 
-    nutrition = {
 
-        "Calories (kcal)":0,
+def search_usda(food):
 
-        "Protein (g)":0,
 
-        "Carbohydrates (g)":0,
+    key = get_usda_key()
 
-        "Fat (g)":0,
 
-        "Fiber (g)":0,
+    if not key:
+        print("NO USDA KEY")
+        return None
 
-        "Sugar (g)":0,
 
-        "Sodium (mg)":0
+
+    params = {
+
+        "api_key": key,
+
+        "query": food,
+
+        "pageSize": 10
 
     }
 
 
-    if not result:
 
-        return nutrition
+    try:
+
+        response = requests.get(
+            USDA_URL,
+            params=params,
+            timeout=10
+        )
+
+
+        data = response.json()
+
+
+        foods = data.get(
+            "foods",
+            []
+        )
+
+
+        if not foods:
+            return None
 
 
 
-    data = result.get(
-        "nutrition",
-        {}
+        # prefer real nutrition databases
+
+        preferred = [
+
+            f for f in foods
+
+            if f.get("dataType")
+            in
+            [
+                "Foundation",
+                "SR Legacy"
+            ]
+
+        ]
+
+
+
+        if preferred:
+
+            return preferred[0]
+
+
+
+        return foods[0]
+
+
+
+    except Exception as e:
+
+        print(
+            "USDA ERROR:",
+            e
+        )
+
+        return None
+
+
+
+
+
+def extract_nutrients(food):
+
+
+    nutrients = {}
+
+
+    for n in food.get(
+        "foodNutrients",
+        []
+    ):
+
+        name = n.get(
+            "nutrientName",
+            ""
+        )
+
+
+        value = n.get(
+            "value",
+            0
+        )
+
+
+
+        nutrients[name] = value
+
+
+
+    return nutrients
+
+
+
+
+
+def normalize_name(name):
+
+
+    mapping = {
+
+
+        "rice flakes":
+        "rice flakes",
+
+
+        "poha":
+        "rice flakes",
+
+
+        "flattened rice":
+        "rice flakes",
+
+
+        "vegetable oil":
+        "oil, vegetable",
+
+
+        "oil":
+        "oil, vegetable",
+
+
+        "potato":
+        "potatoes raw",
+
+
+        "peas":
+        "green peas raw",
+
+
+        "onion":
+        "onions raw",
+
+
+        "peanuts":
+        "peanuts raw"
+
+
+    }
+
+
+    return mapping.get(
+        name.lower(),
+        name
     )
 
 
 
-    for key,value in data.items():
 
 
-        key = key.lower()
+def calculate_item(food, grams):
 
 
-        try:
-
-            value=float(value)
-
-        except:
-
-            continue
+    nutrients = extract_nutrients(
+        food
+    )
 
 
-
-        if "energy" in key:
-
-
-            # Convert kJ to kcal
-
-            if value > 1000:
-
-                value = value / 4.184
-
-
-            nutrition["Calories (kcal)"] = value
+    calories = (
+        nutrients.get(
+            "Energy",
+            nutrients.get(
+                "Energy (Atwater General Factors)",
+                0
+            )
+        )
+    )
 
 
-
-        elif "protein" in key:
-
-            nutrition["Protein (g)"] = value
-
-
-
-        elif "carbohydrate" in key:
-
-            nutrition["Carbohydrates (g)"] = value
+    protein = nutrients.get(
+        "Protein",
+        0
+    )
 
 
-
-        elif "fat" in key or "lipid" in key:
-
-            nutrition["Fat (g)"] = value
-
-
-
-        elif "fiber" in key:
-
-            nutrition["Fiber (g)"] = value
+    carbs = nutrients.get(
+        "Carbohydrate, by difference",
+        nutrients.get(
+            "Carbohydrates",
+            0
+        )
+    )
 
 
+    fat = nutrients.get(
+        "Total lipid (fat)",
+        0
+    )
 
-        elif "sugar" in key:
 
-            nutrition["Sugar (g)"] = value
+    fiber = nutrients.get(
+        "Fiber, total dietary",
+        0
+    )
+
+
+    sodium = nutrients.get(
+        "Sodium, Na",
+        0
+    )
 
 
 
-        elif "sodium" in key:
-
-            nutrition["Sodium (mg)"] = value
+    factor = grams / 100
 
 
 
-    return nutrition
+    return {
+
+
+        "Calories (kcal)":
+        round(
+            calories * factor,
+            2
+        ),
+
+
+        "Protein (g)":
+        round(
+            protein * factor,
+            2
+        ),
+
+
+        "Carbohydrates (g)":
+        round(
+            carbs * factor,
+            2
+        ),
+
+
+        "Fat (g)":
+        round(
+            fat * factor,
+            2
+        ),
+
+
+        "Fiber (g)":
+        round(
+            fiber * factor,
+            2
+        ),
+
+
+        "Sodium (mg)":
+        round(
+            sodium * factor,
+            2
+        )
+
+    }
 
 
 
 
 
-#################################################
-# MAIN INGREDIENT AGENT
-#################################################
 
-def ingredient_agent(ingredients):
+def ingredient_agent(
+        ingredients
+):
 
 
     print(
@@ -168,14 +315,8 @@ def ingredient_agent(ingredients):
     )
 
 
-    print(
-        "INPUT:",
-        ingredients
-    )
-
-
-
     total = {
+
 
         "Calories (kcal)":0,
 
@@ -187,199 +328,102 @@ def ingredient_agent(ingredients):
 
         "Fiber (g)":0,
 
-        "Sugar (g)":0,
-
         "Sodium (mg)":0
 
     }
 
 
 
-    used=[]
+    details=[]
 
 
 
     for item in ingredients:
 
 
-        try:
-
-
-            name = item.get(
-                "name"
-            )
-
-
-            grams = item.get(
-                "grams",
-                100
-            )
-
-
-
-            if not name:
-
-                continue
-
-
-
-            # Skip salt and sugar because recipe quantity
-            # usually represents taste amount
-
-            if name in [
-                "salt",
-                "sugar"
-            ]:
-
-                continue
-
-
-
-            search_name = FOOD_MAPPING.get(
-                name,
-                name
-            )
-
-
-
-            print(
-                "USDA SEARCH:",
-                search_name,
-                grams,
-                "grams"
-            )
-
-
-
-            result = search_usda_food(
-                search_name
-            )
-
-
-
-            per100 = extract_nutrition(
-                result
-            )
-
-
-
-            print(
-                "USDA PER 100G:",
-                search_name,
-                per100
-            )
-
-
-
-            multiplier = grams / 100
-
-
-
-            for key in total:
-
-
-                total[key] += (
-                    per100[key]
-                    *
-                    multiplier
-                )
-
-
-
-            used.append(
-                {
-                    "ingredient": search_name,
-                    "grams": grams
-                }
-            )
-
-
-
-        except Exception as e:
-
-
-            print(
-                "INGREDIENT ERROR:",
-                e
-            )
-
-
-
-
-
-    #################################################
-    # ROUND VALUES
-    #################################################
-
-    for key in total:
-
-
-        total[key] = round(
-            total[key],
-            2
+        name = normalize_name(
+            item["name"]
         )
 
 
+        grams = item["grams"]
 
-    #################################################
-    # CALORIE VALIDATION
-    #################################################
-
-    macro_calories = (
-
-        total["Protein (g)"] * 4
-
-        +
-
-        total["Carbohydrates (g)"] * 4
-
-        +
-
-        total["Fat (g)"] * 9
-
-    )
-
-
-
-    if (
-        total["Calories (kcal)"]
-        >
-        macro_calories * 1.5
-    ):
 
 
         print(
-            "Calories corrected:",
-            total["Calories (kcal)"],
-            "→",
-            macro_calories
+            "SEARCH:",
+            name,
+            grams
         )
 
 
-        total["Calories (kcal)"] = round(
-            macro_calories,
+
+        food = search_usda(
+            name
+        )
+
+
+
+        if not food:
+
+            print(
+                "NOT FOUND:",
+                name
+            )
+
+            continue
+
+
+
+        item_nutrition = calculate_item(
+            food,
+            grams
+        )
+
+
+
+        details.append({
+
+            "Ingredient":
+            name,
+
+            "grams":
+            grams,
+
+            "nutrition":
+            item_nutrition
+
+        })
+
+
+
+        for k,v in item_nutrition.items():
+
+            total[k]+=v
+
+
+
+
+
+    for k in total:
+
+        total[k]=round(
+            total[k],
             2
         )
-
-
-
-    print(
-        "========== FINAL USDA NUTRITION =========="
-    )
-
-
-    print(
-        total
-    )
 
 
 
     return {
 
 
-        "Ingredients Used": used,
+        "Ingredients":
+
+        details,
 
 
-        "Total Nutrition": total
+        "Total Nutrition":
+
+        total
 
     }
