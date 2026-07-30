@@ -177,18 +177,57 @@ def manager_agent(food_name, people):
 
 
     ###################################
-    # USDA NUTRITION
-    ###################################
+# CLEAN INGREDIENTS
+###################################
 
-    nutrition_result = ingredient_agent(
-        quantity_output
+cleaned_ingredients = ingredient_agent(
+    quantity_output
+)
+
+
+###################################
+# USDA NUTRITION
+###################################
+
+from agents.nutrition_agent import nutrition_agent
+
+
+total = {
+    "Calories": 0,
+    "Protein": 0,
+    "Carbs": 0,
+    "Fat": 0
+}
+
+
+for item in cleaned_ingredients:
+
+    result = nutrition_agent(
+        item["usda_name"]
     )
 
 
-    total = nutrition_result.get(
-        "Total Nutrition",
+    nutrition = result.get(
+        "nutrition",
         {}
     )
+
+
+    grams = item.get(
+        "grams",
+        0
+    )
+
+
+    factor = grams / 100
+
+
+    for key in total:
+
+        total[key] += round(
+            nutrition.get(key,0) * factor,
+            2
+        )
 
 
 
