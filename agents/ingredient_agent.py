@@ -1,3 +1,4 @@
+print("INGREDIENT AGENT FILE LOADED")
 # agents/ingredient_agent.py
 
 
