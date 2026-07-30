@@ -1,78 +1,29 @@
 import requests
 import streamlit as st
-import os
 
 
 def food_image_agent(food_name):
 
-    print("==============================")
-    print("FOOD IMAGE AGENT START")
-    print("SEARCH:", food_name)
+    print("========== FOOD IMAGE AGENT ==========")
+    print("SEARCHING IMAGE FOR:", food_name)
 
 
     try:
 
-        # Try Streamlit secret first
-        api_key = None
-
-        try:
-            api_key = st.secrets["UNSPLASH_ACCESS_KEY"]
-
-            print("SECRET FOUND")
-
-        except Exception as e:
-
-            print(
-                "SECRET ERROR:",
-                e
-            )
-
-
-        if not api_key:
-
-            api_key = os.getenv(
-                "UNSPLASH_ACCESS_KEY"
-            )
-
-            print(
-                "ENV KEY FOUND:",
-                bool(api_key)
-            )
-
-
-        print(
-            "FINAL KEY STATUS:",
-            bool(api_key)
-        )
-
-
-        if not api_key:
-
-            print(
-                "NO UNSPLASH KEY"
-            )
-
-            return None
-
+        api_key = st.secrets["UNSPLASH_ACCESS_KEY"]
 
 
         url = "https://api.unsplash.com/search/photos"
 
 
         params = {
-
-            "query": f"{food_name} food",
-
+            "query": food_name + " food",
             "per_page": 1
-
         }
 
 
         headers = {
-
-            "Authorization":
-            f"Client-ID {api_key}"
-
+            "Authorization": f"Client-ID {api_key}"
         }
 
 
@@ -85,56 +36,48 @@ def food_image_agent(food_name):
 
 
         print(
-            "STATUS:",
+            "UNSPLASH STATUS:",
             response.status_code
         )
-
-
-        print(
-            "RESPONSE:",
-            response.text[:500]
-        )
-
-
-
-        if response.status_code != 200:
-
-            return None
-
 
 
         data = response.json()
 
 
+        if data.get("results"):
 
-        if len(data.get("results", [])) == 0:
+
+            photo = data["results"][0]
+
+
+            image_url = photo["urls"]["regular"]
+
+
+            photographer = photo["user"]["name"]
+
 
             print(
-                "NO RESULTS"
+                "IMAGE FOUND:",
+                image_url
+            )
+
+
+            return {
+
+                "image_url": image_url,
+
+                "credit": photographer
+
+            }
+
+
+        else:
+
+            print(
+                "NO IMAGE FOUND"
             )
 
             return None
-
-
-
-        image = data["results"][0]
-
-
-        print(
-            "IMAGE FOUND:",
-            image["urls"]["regular"]
-        )
-
-
-        return {
-
-            "image_url":
-                image["urls"]["regular"],
-
-            "credit":
-                image["user"]["name"]
-
-        }
 
 
 
