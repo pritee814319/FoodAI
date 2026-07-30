@@ -1,6 +1,6 @@
 import requests
-import os
 import streamlit as st
+import os
 
 
 def food_image_agent(food_name):
@@ -11,16 +11,32 @@ def food_image_agent(food_name):
 
     try:
 
-        # Get API key from Streamlit Cloud secrets
+        # Check Streamlit secret
+
         try:
             api_key = st.secrets["UNSPLASH_ACCESS_KEY"]
-        except:
-            api_key = os.getenv("UNSPLASH_ACCESS_KEY")
+            print("SECRET FOUND FROM STREAMLIT")
+
+        except Exception as e:
+
+            print("STREAMLIT SECRET ERROR:", e)
+
+            api_key = os.getenv(
+                "UNSPLASH_ACCESS_KEY"
+            )
+
+
+        print(
+            "API KEY EXISTS:",
+            bool(api_key)
+        )
 
 
         if not api_key:
 
-            print("❌ UNSPLASH KEY NOT FOUND")
+            print(
+                "NO API KEY"
+            )
 
             return None
 
@@ -30,15 +46,20 @@ def food_image_agent(food_name):
 
 
         params = {
-            "query": f"{food_name} food dish",
+
+            "query": food_name + " dish",
+
             "per_page": 1
+
         }
 
 
         headers = {
-            "Authorization": f"Client-ID {api_key}"
-        }
 
+            "Authorization":
+            f"Client-ID {api_key}"
+
+        }
 
 
         response = requests.get(
@@ -55,45 +76,36 @@ def food_image_agent(food_name):
         )
 
 
-
-        data = response.json()
-
-
-
-        if "results" in data and len(data["results"]) > 0:
+        print(
+            "UNSPLASH RESPONSE:",
+            response.text[:200]
+        )
 
 
-            image = data["results"][0]
+        data=response.json()
 
 
-            print(
-                "IMAGE FOUND:",
-                image["urls"]["regular"]
-            )
+        if len(data.get("results",[])) > 0:
+
+            image=data["results"][0]
 
 
             return {
 
                 "image_url":
-                    image["urls"]["regular"],
+                image["urls"]["regular"],
 
                 "credit":
-                    image["user"]["name"]
+                image["user"]["name"]
 
             }
 
-
-
-        print(
-            "NO IMAGE RESULTS"
-        )
 
         return None
 
 
 
     except Exception as e:
-
 
         print(
             "IMAGE ERROR:",
